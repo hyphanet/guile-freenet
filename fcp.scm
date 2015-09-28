@@ -4,7 +4,8 @@
  (ice-9 rw) ;; write-string
  (ice-9 rdelim)
  (ice-9 pretty-print)
- (ice-9 vlist))
+ (ice-9 vlist)
+ (srfi srfi-11)) ; let-values
 
 (define (println s)
   (pretty-print s))
@@ -48,12 +49,13 @@
 
   (letrec* ((send
          (lambda* (name opts #:optional (data #f) (data-length 0))
+                  (println (symbol->string name))
                   (write-line (symbol->string name))
                   (for-each
                    (λ (pair)
                      (let ((name (car pair))
                            (value (cdr pair)))
-                       (write-line (string-append (symbol->string name)
+                       (let ((line (string-append (symbol->string name)
                                                   "=" (cond
                                                        ((symbol? value) (symbol->string value))
                                                        ((string? value) value)
@@ -63,7 +65,9 @@
                                                        ((eq? value #f) "false")
                                                        ((eq? value #t) "true")
                                                        (else
-                                                        (error "wat is ~s" value)))))))
+                                                        (error "wat is ~s" value))))))
+                         (println line)
+                         (write-line line))))
                    opts)
                   (if data
                       (begin
@@ -81,6 +85,7 @@
                          (else
                           (error "How to write this data?" data))))
                       (begin
+                        (println "EndMessage")
                         (write-line "EndMessage")
                         (newline sock)))))
          (expect
@@ -136,7 +141,7 @@
                             (println (list 'waiteruh waiter))
                          (if (equal? line "Data")
                              (let-values (((feed finished) (waiter name identifier opts))
-                                          ((total) (string->number (cdr (assoc "DataLength" opts)))))
+                                          ((total) (string->number (cdr (assoc 'DataLength opts)))))
                                (let reading-data ((left total))
                                  (if (<= left 0)
                                      (finished total)
@@ -196,7 +201,7 @@
    (expect 'NodeHello
            (λ (name identifier opts)
              (pretty-print (list 'got name opts))
-             (expect '(SimpleProgress ProtocolError)
+             (expect '(SimpleProgress); ProtocolError)
                      (λ (name identifier opts)
                        (pretty-print (list 'progress name opts))))
              (expect '(DataFound)
