@@ -108,6 +108,7 @@
                 (let read-a-message ()
                   (define name (string->symbol
                                 (let ((line (read-line sock 'trim)))
+                                  (println (list 'line line))
                                   (when (eof-object? line)
                                         (error "Fffail"))
                                   line)))
