@@ -201,7 +201,7 @@
    (expect 'NodeHello
            (λ (name identifier opts)
              (pretty-print (list 'got name opts))
-             (expect '(SimpleProgress); ProtocolError)
+             (expect '(SimpleProgress) ; ProtocolError)
                      (λ (name identifier opts)
                        (pretty-print (list 'progress name opts))))
              (expect '(DataFound)
