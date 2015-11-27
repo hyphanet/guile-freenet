@@ -1,3 +1,6 @@
+;; Copyright (c) 2015 dinky's evil twin sone://EWtk1limedjBM2LnGE3~z98tC8bLTu9ryLIMcFgg8PI
+;; License: LGPL
+
 (use-modules
  (rnrs bytevectors)
  (rnrs io ports) ;; get/put-bytevector bytevector->string
