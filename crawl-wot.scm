@@ -16,6 +16,7 @@ exec guile -e main -s "$0" "$@"
              (rnrs io ports)
              (ice-9 match)
              (srfi srfi-42)
+             (srfi srfi-1)
              (rnrs bytevectors)
              (sxml simple)
              (sxml match))
@@ -55,15 +56,21 @@ exec guile -e main -s "$0" "$@"
               (assoc-ref h 'content-type))))))))
 
 
+(define (non-breaking-sxml-reader xml-port)
+  (catch #t
+         (lambda () (xml->sxml xml-port))
+         (lambda (key . args) (format #t "~A: ~A" key args)(newline) '())))
+
 (define (snarf-wot-ids xml-port)
-  (let ((uris '()))
-    (let grab-uris ((sxml (xml->sxml xml-port)))
-      (match sxml
-             (('Identity uri) (set! uris (cons uri uris)))
-             ((a b ...)
-              (map grab-uris sxml))
-             (else sxml)))
-    uris))
+  (let ((sxml (non-breaking-sxml-reader xml-port)))
+    (let ((uris '()))
+      (let grab-uris ((sxml sxml))
+        (match sxml
+               (('Identity uri) (set! uris (cons uri uris)))
+               ((a b ...)
+                (map grab-uris sxml))
+               (else sxml)))
+      uris)))
 
 (define (wot-uri-key uri)
   (string-take uri (string-index uri #\/)))
@@ -90,8 +97,10 @@ exec guile -e main -s "$0" "$@"
               (write (car new))(newline))
         (when (not (null? known))
               (display 'known:)
-              (write (car known))(newline))
-        (set! known (cons new known))
+              (write (car known))(newline)(write (length known))(newline))
+        (set! known (lset-union equal?
+                     (list-ec (: u new) (wot-uri-key u))
+                     known))
         (map crawl new)))))
 
 (define (main args)
