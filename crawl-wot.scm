@@ -81,7 +81,8 @@ exec guile -e main -s "$0" "$@"
 (define (dump-wot-id uri filename)
   (if (string-prefix? "USK@" uri)
       (let ((port (open-output-file filename)))
-        (put-string port (get (furl-uri uri))))
+        (put-string port (get (furl-uri uri)))
+        (close-port port))
       (error (format #t "tried to save in file ~A" uri))))
 
 (define (crawl-wot seed-id)
