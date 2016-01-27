@@ -88,7 +88,7 @@ exec guile -e main -s "$0" "$@"
   (let ((known '()))
     (let crawl ((seed seed-id))
       ;; save the data
-      (dump-wot-id seed-id (wot-uri-filename seed))
+      (dump-wot-id seed (wot-uri-filename seed))
       ;; snarf all uris
       (let* ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids))
              (new (list-ec (: u uris) (if (not (member (wot-uri-key u) known))) u)))
@@ -101,7 +101,7 @@ exec guile -e main -s "$0" "$@"
         (set! known (lset-union equal?
                      (list-ec (: u new) (wot-uri-key u))
                      known))
-        (map crawl new)))))
+        (n-par-map 10 crawl new)))))
 
 (define (main args)
   (dump-wot-id seed-id (wot-uri-filename seed-id))
