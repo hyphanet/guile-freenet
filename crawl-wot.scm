@@ -105,6 +105,10 @@ exec guile -e main -s "$0" "$@"
         (n-par-map 10 crawl new)))))
 
 (define (main args)
-  (dump-wot-id seed-id (wot-uri-filename seed-id))
-  (crawl-wot seed-id)
-  (newline))
+  (write args)(newline)
+  (let ((seed-id (if (null? (cdr args))
+                     seed-id
+                     (car (cdr args)))))
+    (dump-wot-id seed-id (wot-uri-filename seed-id))
+    (crawl-wot seed-id)
+    (newline)))
