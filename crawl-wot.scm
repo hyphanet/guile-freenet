@@ -69,7 +69,7 @@ exec guile -e main -s "$0" "$@"
                (('Identity uri) (set! uris (cons uri uris)))
                ((a b ...)
                 (map grab-uris sxml))
-               (else sxml)))
+               (else '())))
       uris)))
 
 (define (wot-uri-key uri)
@@ -91,18 +91,25 @@ exec guile -e main -s "$0" "$@"
       ;; save the data
       (dump-wot-id seed (wot-uri-filename seed))
       ;; snarf all uris
-      (let* ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids))
-             (new (list-ec (: u uris) (if (not (member (wot-uri-key u) known))) u)))
-        (when (not (null? new))
-              (display 'new:)
-              (write (car new))(newline))
-        (when (not (null? known))
-              (display 'known:)
-              (write (car known))(newline)(write (length known))(newline))
-        (set! known (lset-union equal?
-                     (list-ec (: u new) (wot-uri-key u))
-                     known))
-        (n-par-map 10 crawl new)))))
+      (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
+              (write seed)(newline)
+        (when (not (null? uris))
+              (write (car uris))(newline))
+        (let ((new (list-ec (: u uris) (if (and
+                                            (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
+                                            (not (member (wot-uri-key u) known)))) u)))
+          (when (not (null? new))
+                (display 'new:)
+                (write (car new))(newline))
+          (when (not (null? known))
+                (display 'known:)
+                (write (car known))(newline)(write (length known))(newline))
+          (set! known (lset-union equal?
+                                  (list-ec (: u new) (wot-uri-key u))
+                                  known))
+          (if (null? new)
+              known
+              (append known (map crawl new))))))))
 
 (define (main args)
   (write args)(newline)
