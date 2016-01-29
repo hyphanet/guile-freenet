@@ -76,14 +76,20 @@ exec guile -e main -s "$0" "$@"
   (string-take uri (string-index uri #\/)))
 
 (define (wot-uri-filename uri)
-  (string-join (string-split uri #\/) "-"))
+  (let ((u (if (string-prefix? "freenet:" uri)
+               (substring uri 8)
+               uri)))
+    (string-join (string-split u #\/) "-")))
 
 (define (dump-wot-id uri filename)
-  (if (string-prefix? "USK@" uri)
-      (let ((port (open-output-file filename)))
-        (put-string port (get (furl-uri uri)))
-        (close-port port))
-      (error (format #t "tried to save in file ~A" uri))))
+  (let ((u (if (string-prefix? "freenet:" uri)
+               (substring uri 8)
+               uri)))
+    (if (string-prefix? "USK@" u)
+        (let ((port (open-output-file filename)))
+          (put-string port (get (furl-uri u)))
+          (close-port port))
+        (error (format #t "tried to save in file ~A" u)))))
 
 (define (crawl-wot seed-id)
   (let ((known '()))
@@ -116,6 +122,7 @@ exec guile -e main -s "$0" "$@"
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (dump-wot-id seed-id (wot-uri-filename seed-id))
+    (dump-wot-id seed-id
+                 (wot-uri-filename seed-id))
     (crawl-wot seed-id)
     (newline)))
