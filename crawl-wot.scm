@@ -162,6 +162,8 @@ exec guile -e main -s "$0" "$@"
                          (map (lambda (week)
                                 (let* ((weekuri (datehint-for-key (wot-uri-key uri) year #:week week))
                                        (hint (get (furl-uri weekuri))))
+                                  (write weekuri)(newline)
+                                  (write hint)(newline)
                                   (if (not (string? hint))
                                       #f
                                       (let* ((hint-alist (parse-datehint hint))
