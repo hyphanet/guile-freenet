@@ -135,7 +135,7 @@ exec guile -e main -s "$0" "$@"
 
 (define (furl-key-name-version key name version)
   "Get a freenet URL for the key and the version"
-  (furl-uri (string-append key "/" name "-" (number->string version))))
+  (furl-uri (string-append "SSK" (substring key 3) "/" name "-" version)))
 
 (define (download-by-date-hint uri)
   "Download all versions of the ID, ordered by the week in the DATEHINT."
@@ -167,27 +167,26 @@ exec guile -e main -s "$0" "$@"
                                   (if (not (string? hint))
                                       #f
                                       (let* ((hint-alist (parse-datehint hint))
-                                             (version (assoc 'version  hint-alist))
-                                             (date (assoc 'date hint-alist))
+                                             (version (assoc-ref hint-alist 'version))
+                                             (date (assoc-ref hint-alist 'date))
                                              (url (furl-key-name-version (wot-uri-key uri) "WebOfTrust" version))
-                                             (filename (string-append date "/" uri "-" (number->string version))))
+                                             (filename (string-append date "/" (wot-uri-key uri) "-" version)))
                                         (when (not (file-exists? date))
                                           (mkdir date))
-                                        (let ((port (open-output-file filename)))
-                                          (put-string port (get url))
-                                          (close-port port))
+                                        (write url)(newline)
+                                        (let ((data (get url)))
+                                          (when (string? data)
+                                            (let ((port (open-output-file filename)))
+                                              (put-string port data)
+                                              (close-port port))))
                                         filename))))
                               weeks))))
                  years))))
 
+
 (define (main args)
-  (write args)(newline)
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (write (download-by-date-hint seed-id))
-    (newline)))
-    ; (dump-wot-id seed-id
-    ;              (wot-uri-filename seed-id))
-    ; (let ((known-ids (crawl-wot seed-id)))
-    ;   (newline))))
+    (map download-by-date-hint
+         (crawl-wot seed-id))))
