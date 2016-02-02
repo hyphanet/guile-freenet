@@ -31,8 +31,8 @@ exec guile -e main -s "$0" "$@"
   (string-append base-url "/" uri "?forcedownload=true"))
 
 
-(define (get uri)
-  (let* ((u (string->uri uri))
+(define (get url)
+  (let* ((u (string->uri url))
          (r (build-request u))
          (p (open-socket-for-uri u))
          (rr (write-request r p))
@@ -45,15 +45,18 @@ exec guile -e main -s "$0" "$@"
       (let ((c (response-code resp))
             (h (response-headers resp))
             (b (read-response-body resp)))
-        (if (= c 301)
-            (get (furl (assoc-ref h 'location)))
-            (cond
-             ((equal? '(text/html (charset . "utf-8")) (assoc-ref h 'content-type))
-              (utf8->string b))
-             ((equal? '(application/force-download) (assoc-ref h 'content-type))
-              (utf8->string b))
-             (else
-              (assoc-ref h 'content-type))))))))
+        (cond
+         ((= c 301)
+          (get (furl (assoc-ref h 'location))))
+          ((= c 200)
+           (cond
+            ((equal? '(text/html (charset . "utf-8")) (assoc-ref h 'content-type))
+             (utf8->string b))
+            ((equal? '(application/force-download) (assoc-ref h 'content-type))
+             (utf8->string b))
+            (else (assoc-ref h 'content-type))))
+          (else c))))))
+
 
 
 (define (non-breaking-sxml-reader xml-port)
@@ -117,12 +120,72 @@ exec guile -e main -s "$0" "$@"
               known
               (append known (map crawl new))))))))
 
+(define (parse-datehint str)
+  (let ((lines (string-split str #\newline)))
+    `((version . ,(list-ref lines 1))
+      (date . ,(list-ref lines 2)))))
+
+(define* (datehint-for-key key year #:key (sitename "WebOfTrust") (week #f))
+  (string-append "SSK" (substring key 3)
+                 "/" sitename
+                 "-" "DATEHINT"
+                 "-" (number->string year)
+                 (if week (string-append "-WEEK-" (number->string week)) "")))
+  
+
+(define (furl-key-name-version key name version)
+  "Get a freenet URL for the key and the version"
+  (furl-uri (string-append key "/" name "-" (number->string version))))
+
+(define (download-by-date-hint uri)
+  "Download all versions of the ID, ordered by the week in the DATEHINT."
+  ;; An uri looks like this: USK@QWW2a74OWrtN-aWJ80fjWhfFx8NlNrlU0dQfd3J7t1E,2g-wfM57Up9DV1qoEDMPcDU-KPskk0yyiYFz67ydSos,AQACAAE
+  ;; A date hint for WoT looks like this: SSK@QWW2a74OWrtN-aWJ80fjWhfFx8NlNrlU0dQfd3J7t1E,2g-wfM57Up9DV1qoEDMPcDU-KPskk0yyiYFz67ydSos,AQACAAE-WebOfTrust-DATEHINT-2015
+  ;; or
+  ;; SSK@[key]/[sitename]-DATEHINT-[year]
+  ;; SSK@[key]/[sitename]-DATEHINT-[year]-WEEK-[week]
+  ;; SSK@[key]/[sitename]-DATEHINT-[year]-[month]
+  ;; SSK@[key]/[sitename]-DATEHINT-[year]-[month]-[day]
+  ;; see http://draketo.de/light/english/freenet/usk-and-date-hints
+  ;; Approach: First check whether the ID has a date hint for each year. Then check each weak in the matching years.
+  ;; download the versions into directories ordered as YEAR-month-day/SSK@...-WebOfTrust-version
+  (let ((years (iota 10 2016 -1))
+        (weeks (iota 52 52 -1))) ; 52-1
+    (delete #f
+            (map (lambda (year)
+                   (let* ((yearuri (datehint-for-key (wot-uri-key uri) year))
+                          (hint (get (furl-uri yearuri))))
+                     (write yearuri)(newline)
+                     (write hint)(newline)
+                     (if (not (string? hint))
+                         #f
+                         (map (lambda (week)
+                                (let* ((weekuri (datehint-for-key (wot-uri-key uri) year #:week week))
+                                       (hint (get (furl-uri weekuri))))
+                                  (if (not (string? hint))
+                                      #f
+                                      (let* ((hint-alist (parse-datehint hint))
+                                             (version (assoc 'version  hint-alist))
+                                             (date (assoc 'date hint-alist))
+                                             (url (furl-key-name-version (wot-uri-key uri) "WebOfTrust" version))
+                                             (filename (string-append date "/" uri "-" (number->string version))))
+                                        (when (not (file-exists? date))
+                                          (mkdir date))
+                                        (let ((port (open-output-file filename)))
+                                          (put-string port (get url))
+                                          (close-port port))
+                                        filename))))
+                              weeks))))
+                 years))))
+
 (define (main args)
   (write args)(newline)
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (dump-wot-id seed-id
-                 (wot-uri-filename seed-id))
-    (crawl-wot seed-id)
+    (write (download-by-date-hint seed-id))
     (newline)))
+    ; (dump-wot-id seed-id
+    ;              (wot-uri-filename seed-id))
+    ; (let ((known-ids (crawl-wot seed-id)))
+    ;   (newline))))
