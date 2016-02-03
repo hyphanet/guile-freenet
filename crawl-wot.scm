@@ -188,6 +188,6 @@ exec guile -e main -s "$0" "$@"
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (write (download-by-date-hint seed-id))))
-    ;; (map download-by-date-hint
-    ;;     (crawl-wot seed-id))))
+    ;; (write (download-by-date-hint seed-id))
+    (map download-by-date-hint
+         (crawl-wot seed-id))))
