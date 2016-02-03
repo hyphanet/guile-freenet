@@ -103,9 +103,9 @@ exec guile -e main -s "$0" "$@"
       (dump-wot-id seed (wot-uri-filename seed))
       ;; snarf all uris
       (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
-              (write seed)(newline)
-        (when (not (null? uris))
-              (write (car uris))(newline))
+        ;; (write seed)(newline)
+        ;; (when (not (null? uris))
+        ;;  (write (car uris))(newline))
         (let ((new (list-ec (: u uris) (if (and
                                             (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
                                             (not (member (wot-uri-key u) known)))) u)))
