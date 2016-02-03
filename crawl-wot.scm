@@ -89,9 +89,11 @@ exec guile -e main -s "$0" "$@"
                (substring uri 8)
                uri)))
     (if (string-prefix? "USK@" u)
-        (let ((port (open-output-file filename)))
-          (put-string port (get (furl-uri u)))
-          (close-port port))
+        (let ((data (get (furl-uri u))))
+          (when (string? data)
+            (let ((port (open-output-file filename)))
+              (put-string port data)
+              (close-port port))))
         (error (format #t "tried to save in file ~A" u)))))
 
 (define (crawl-wot seed-id)
@@ -171,19 +173,21 @@ exec guile -e main -s "$0" "$@"
   (let ((years (iota 10 2016 -1))
         (weeks (iota 52 52 -1))) ; 52-1
     (delete #f ;; only return the filenames of successful downloads 
-            (map (lambda (year)
-                   (let* ((yearuri (datehint-for-key (wot-uri-key uri) year))
-                          (hint (get (furl-uri yearuri))))
-                     (if (not (string? hint))
-                         #f
-                         (map (lambda (week) (download-by-weekly-date-hint uri year week))
-                              weeks))))
-                 years))))
-
+            (par-map (lambda (year)
+                       (let* ((yearuri (datehint-for-key (wot-uri-key uri) year))
+                              (hint (get (furl-uri yearuri))))
+                         (if (not (string? hint))
+                             #f
+                             (delete #f ;; only return the filenames of successful downloads 
+                                     (n-par-map 52 (lambda (week)
+                                                     (download-by-weekly-date-hint uri year week))
+                                                weeks)))))
+                     years))))
 
 (define (main args)
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (map download-by-date-hint
-         (crawl-wot seed-id))))
+    (write (download-by-date-hint seed-id))))
+    ;; (map download-by-date-hint
+    ;;     (crawl-wot seed-id))))
