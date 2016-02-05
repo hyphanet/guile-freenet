@@ -90,37 +90,41 @@ exec guile -e main -s "$0" "$@"
                uri)))
     (if (string-prefix? "USK@" u)
         (let ((data (get (furl-uri u))))
-          (when (string? data)
+          (if (string? data)
             (let ((port (open-output-file filename)))
               (put-string port data)
-              (close-port port))))
-        (error (format #t "tried to save in file ~A" u)))))
+              (close-port port))
+            (error (format #t "tried to save in file ~A" filename))))
+        (error (format #t "tried to save in file ~A" filename)))))
 
 (define (crawl-wot seed-id)
   (let ((known '()))
     (let crawl ((seed seed-id))
       ;; save the data
-      (dump-wot-id seed (wot-uri-filename seed))
-      ;; snarf all uris
-      (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
-        ;; (write seed)(newline)
-        ;; (when (not (null? uris))
-        ;;  (write (car uris))(newline))
-        (let ((new (list-ec (: u uris) (if (and
-                                            (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
-                                            (not (member (wot-uri-key u) known)))) u)))
-          (when (not (null? new))
+      (if (catch 'misc-error
+            (lambda () (dump-wot-id seed (wot-uri-filename seed)) #f)
+            (lambda (key . args) #t))
+          known
+          ;; snarf all uris
+          (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
+            ;; (write seed)(newline)
+            ;; (when (not (null? uris))
+            ;;  (write (car uris))(newline))
+            (let ((new (list-ec (: u uris) (if (and
+                                                (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
+                                                (not (member (wot-uri-key u) known)))) u)))
+              (when (not (null? new))
                 (display 'new:)
                 (write (car new))(newline))
-          (when (not (null? known))
+              (when (not (null? known))
                 (display 'known:)
                 (write (car known))(newline)(write (length known))(newline))
-          (set! known (lset-union equal?
-                                  (list-ec (: u new) (wot-uri-key u))
-                                  known))
-          (if (null? new)
-              known
-              (append known (map crawl new))))))))
+              (set! known (lset-union equal?
+                                      (list-ec (: u new) (wot-uri-key u))
+                                      known))
+              (if (null? new)
+                  known
+                  (append known (map crawl new)))))))))
 
 (define (parse-datehint str)
   (let ((lines (string-split str #\newline)))
