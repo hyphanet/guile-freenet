@@ -78,7 +78,7 @@ exec guile -e main -s "$0" "$@"
 (define (wot-uri-key uri)
   (let ((index (string-index uri #\/)))
     (if index 
-        (string-take uri )
+        (string-take uri index)
         uri))) ;; no / in uri, so it is already a key.
 
 (define (wot-uri-filename uri)
