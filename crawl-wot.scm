@@ -188,7 +188,7 @@ exec guile -e main -s "$0" "$@"
   ;; Approach: First check whether the ID has a date hint for each year. Then check each weak in the matching years.
   ;; download the versions into directories ordered as YEAR-month-day/SSK@...-WebOfTrust-version
   (let ((years (iota 10 2016 -1))
-        (weeks (iota 52 52 -1))) ; 52-1
+        (weeks (iota 52 1))) ; 52-1
     (delete #f ;; only return the filenames of successful downloads 
             (par-map (lambda (year)
                        (let* ((yearuri (datehint-for-key (wot-uri-key uri) year))
@@ -205,6 +205,9 @@ exec guile -e main -s "$0" "$@"
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    (write (download-by-date-hint seed-id))
-    (map download-by-date-hint
-         (crawl-wot seed-id))))
+    (let ((seed (if (string-index seed-id #\/)
+                    seed-id
+                    (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/0"))))
+      (write (download-by-date-hint seed))
+      (map download-by-date-hint
+           (crawl-wot seed)))))
