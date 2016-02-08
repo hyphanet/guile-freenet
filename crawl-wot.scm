@@ -76,7 +76,10 @@ exec guile -e main -s "$0" "$@"
       uris)))
 
 (define (wot-uri-key uri)
-  (string-take uri (string-index uri #\/)))
+  (let ((index (string-index uri #\/)))
+    (if index 
+        (string-take uri )
+        uri))) ;; no / in uri, so it is already a key.
 
 (define (wot-uri-filename uri)
   (let ((u (if (string-prefix? "freenet:" uri)
@@ -202,6 +205,6 @@ exec guile -e main -s "$0" "$@"
   (let ((seed-id (if (null? (cdr args))
                      seed-id
                      (car (cdr args)))))
-    ;; (write (download-by-date-hint seed-id))
+    (write (download-by-date-hint seed-id))
     (map download-by-date-hint
          (crawl-wot seed-id))))
