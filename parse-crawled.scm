@@ -69,11 +69,12 @@ See https://gephi.org/users/supported-graph-formats/csv-format/
 "
   (let ((port (if target-filename
                   (open-output-file target-filename)
-                  (current-output-port))))
-    (display (string-join (map car trusts) ";") port)
+                  (current-output-port)))
+        (ids (map car trusts)))
+    (display (string-join ids ";") port)
     (newline port)
-    (write (car trusts))
-    (newline)
+    ; (write (car trusts))
+    ; (newline)
     (when target-filename (close-port port))))
 
 
