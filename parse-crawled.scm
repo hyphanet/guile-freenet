@@ -95,4 +95,4 @@ B;0;0
            (files (cdr (scandir dir select?))))
       (trust-lists->csv
        (par-map parse-trust-values
-                (list (car files) (car (cdr files))))))))
+                (list (car files) (car (cdr files)) (car (cdr (cdr files)))))))))
