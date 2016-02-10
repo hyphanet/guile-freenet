@@ -29,12 +29,29 @@ exec guile -e main -s "$0" "$@"
          (lambda (key . args) (format #t "~A: ~A" key args)(newline) '())))
 
 
+(define (wot-uri-key uri)
+  (let ((index (string-index uri #\/)))
+    (if index 
+        (string-take uri index)
+        uri))) ;; no / in uri, so it is already a key.
+
+
+
 (define (parse-trust-values filename)
   (let* ((port (open-input-file filename))
          (sxml (non-breaking-sxml-reader port))
-         (closed (close-port port)))
-    #f))
-    
+         (closed (close-port port))
+         (trust '()))
+    (let extract-trust ((sxml sxml))
+      (match sxml
+        (('Trust ('@ ('Value value) ('Identity uri) rest ...))
+         (set! trust (cons (cons (wot-uri-key uri) value) trust)))
+        ((a b ...)
+         (map extract-trust sxml))
+        (else '())))
+    trust))
+
+
 
 (define (main args)
   (let ((dir (if (null? (cdr args))
