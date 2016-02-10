@@ -62,11 +62,17 @@ exec guile -e main -s "$0" "$@"
     (cons (wot-file-key filename) trust)))
 
 
+(define* (trust-lists->csv trusts #:key (target-filename #f))
+  (display (string-join (map car (trusts)) ";"))
+  (newline)
+  (write (car trusts))
+  (newline))
+
 
 (define (main args)
   (let ((dir (if (null? (cdr args))
                  "."
                  (car (cdr args)))))
     (let ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@" x)))))
-      (write (par-map parse-trust-values (cdr (scandir dir select?))))
-      (newline))))
+      (trust-lists->csv
+       (par-map parse-trust-values (cdr (scandir dir select?)))))))
