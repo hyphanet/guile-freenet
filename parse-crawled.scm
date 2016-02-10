@@ -93,7 +93,8 @@ B;A;1
                         (let* ((edge (car trusted))
                                (trustee (car edge))
                                (weight (cdr edge)))
-                          (format port "~A;~A;~f\n" id trustee weight)
+                          (when weight ; avoid stumbling over incorrectly formatted trust values
+                              (format port "~A;~A;~f\n" id trustee weight))
                           (write-trust (cdr trusted)))))))
              (write-edges (cdr trusts)))))
     ; (write (car trusts))
