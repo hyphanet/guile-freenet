@@ -63,16 +63,26 @@ exec guile -e main -s "$0" "$@"
 
 
 (define* (trust-lists->csv trusts #:key (target-filename #f))
-  (display (string-join (map car (trusts)) ";"))
-  (newline)
-  (write (car trusts))
-  (newline))
+  "Format the list of trust lists as csv file.
+
+See https://gephi.org/users/supported-graph-formats/csv-format/
+"
+  (let ((port (if target-filename
+                  (open-output-file target-filename)
+                  (current-output-port))))
+    (display (string-join (map car trusts) ";") port)
+    (newline port)
+    (write (car trusts))
+    (newline)
+    (when target-filename (close-port port))))
 
 
 (define (main args)
   (let ((dir (if (null? (cdr args))
                  "."
                  (car (cdr args)))))
-    (let ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@" x)))))
+    (let* ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@" x))))
+           (files (cdr (scandir dir select?))))
       (trust-lists->csv
-       (par-map parse-trust-values (cdr (scandir dir select?)))))))
+       (par-map parse-trust-values
+                (list (car files) (car (cdr files))))))))
