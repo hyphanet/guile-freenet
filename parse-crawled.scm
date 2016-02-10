@@ -36,6 +36,13 @@ exec guile -e main -s "$0" "$@"
         uri))) ;; no / in uri, so it is already a key.
 
 
+(define (wot-file-key filename)
+  (let* ((pubkey-identifier ",AQACAAE")
+         (index (string-contains filename pubkey-identifier)))
+    (if index
+        (string-take filename (+ index (string-length pubkey-identifier)))
+        filename)))
+
 
 (define (parse-trust-values filename)
   (let* ((port (open-input-file filename))
@@ -45,11 +52,14 @@ exec guile -e main -s "$0" "$@"
     (let extract-trust ((sxml sxml))
       (match sxml
         (('Trust ('@ ('Value value) ('Identity uri) rest ...))
-         (set! trust (cons (cons (wot-uri-key uri) value) trust)))
+         (set! trust
+           (cons (cons (wot-uri-key uri)
+                       (string->number value))
+                 trust)))
         ((a b ...)
          (map extract-trust sxml))
         (else '())))
-    trust))
+    (cons (wot-file-key filename) trust)))
 
 
 
@@ -57,6 +67,6 @@ exec guile -e main -s "$0" "$@"
   (let ((dir (if (null? (cdr args))
                  "."
                  (car (cdr args)))))
-    (let ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@--PQYgLrwxB~4Q~vok8EVMCGoPzxSsVem6TwsN9CBKE,UEcmWOEG24NhwoMlP8IkhySUUyRkPwZnIsNoP2nZy4U,AQACAAE-WebOfTrust-0" x)))))
-      (write (map parse-trust-values (cdr (scandir dir select?))))
+    (let ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@" x)))))
+      (write (par-map parse-trust-values (cdr (scandir dir select?))))
       (newline))))
