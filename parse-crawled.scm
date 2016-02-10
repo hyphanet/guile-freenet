@@ -66,12 +66,21 @@ exec guile -e main -s "$0" "$@"
   "Format the list of trust lists as csv file.
 
 See https://gephi.org/users/supported-graph-formats/csv-format/
+
+steps:
+- trusting ids: map car trusts
+- additional ids: every ID not in trusting ids.
+
+;A;B
+A;0;1
+B;0;0
+
 "
   (let ((port (if target-filename
                   (open-output-file target-filename)
                   (current-output-port)))
         (ids (map car trusts)))
-    (display (string-join ids ";") port)
+    (display (string-append ";" (string-join ids ";")) port)
     (newline port)
     ; (write (car trusts))
     ; (newline)
