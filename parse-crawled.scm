@@ -71,17 +71,31 @@ steps:
 - trusting ids: map car trusts
 - additional ids: every ID not in trusting ids.
 
-;A;B
-A;0;1
-B;0;0
+Source;Target;Weight
+A;B;0
+B;A;1
 
 "
   (let ((port (if target-filename
                   (open-output-file target-filename)
                   (current-output-port)))
         (ids (map car trusts)))
-    (display (string-append ";" (string-join ids ";")) port)
+    (display "Source;Target;Weight" port)
     (newline port)
+    (let write-edges ((trusts trusts))
+      (cond ((null? trusts) #t)
+            (else
+             (let* ((id (car (car trusts)))
+                    (trusted (cdr (car trusts))))
+               (let write-trust ((trusted trusted))
+                 (cond ((null? trusted) #t)
+                       (else 
+                        (let* ((edge (car trusted))
+                               (trustee (car edge))
+                               (weight (cdr edge)))
+                          (format port "~A;~A;~f\n" id trustee weight)
+                          (write-trust (cdr trusted)))))))
+             (write-edges (cdr trusts)))))
     ; (write (car trusts))
     ; (newline)
     (when target-filename (close-port port))))
@@ -93,6 +107,6 @@ B;0;0
                  (car (cdr args)))))
     (let* ((select? (lambda (x) (or (equal? x ".") (string-prefix? "USK@" x))))
            (files (cdr (scandir dir select?))))
-      (trust-lists->csv
-       (par-map parse-trust-values
-                (list (car files) (car (cdr files)) (car (cdr (cdr files)))))))))
+      (trust-lists->csv 
+       (par-map parse-trust-values files)
+       #:target-filename "trust.csv"))))
