@@ -17,6 +17,7 @@ exec guile -e main -s "$0" "$@"
         (outport (open-output-file outfile)))
     ;; first copy the header
     (display (read-line inport) outport)
+    (newline outport)
     (let copy-dedup ((line (read-line inport)))
       (cond
        ((eof-object? line)
@@ -28,7 +29,8 @@ exec guile -e main -s "$0" "$@"
                (key (string-append source target)))
           (when (not (hash-ref known key))
             (hash-set! known key #t)
-            (display line outport))
+            (display line outport)
+            (newline outport))
           (copy-dedup (read-line inport))))))))
             
 
