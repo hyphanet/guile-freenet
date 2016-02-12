@@ -108,43 +108,43 @@ exec guile -e main -s "$0" "$@"
         (else (list l))))
 
 (define* (crawl-wot seed-id #:key (redownload #f))
-  (flatten
-   (let ((known '()))
-     (let crawl ((seed seed-id))
-       ;; save the data
-       (if (catch 'misc-error
-             (lambda () (let* ((filename (wot-uri-filename seed))
-                               (dump (lambda () (dump-wot-id seed filename))))
-                          (if (and (not redownload) (file-exists? filename))
-                              (let* ((s (stat filename))
-                                     (size (stat:size s)))
-                                (if (= size 0)
-                                    (dump)
-                                    (format #t "Use local copy of file ~A (redownload ~A).\n" filename redownload)))
-                              (dump))
-                          #f))
-             (lambda (key . args) #t))
-           known
-           ;; snarf all uris
-           (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
-             ;; (write seed)(newline)
-             ;; (when (not (null? uris))
-             ;;  (write (car uris))(newline))
-             (let ((new (list-ec (: u uris) (if (and
-                                                 (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
-                                                 (not (member (wot-uri-key u) known)))) u)))
-               (when (not (null? new))
-                 (display 'new:)
-                 (write (car new))(newline))
-               (when (not (null? known))
-                 (display 'known:)
-                 (write (car known))(newline)(write (length known))(newline))
-               (set! known (lset-union equal?
-                                       (list-ec (: u new) (wot-uri-key u))
-                                       known))
-               (if (null? new)
-                   known
-                   (append known (map crawl new))))))))))
+  ;; TODO: add (flatten ...) with Guile 2.1.x (currently it gives a stack overflow)
+  (let ((known '()))
+    (let crawl ((seed seed-id))
+      ;; save the data
+      (if (catch 'misc-error
+            (lambda () (let* ((filename (wot-uri-filename seed))
+                              (dump (lambda () (dump-wot-id seed filename))))
+                         (if (and (not redownload) (file-exists? filename))
+                             (let* ((s (stat filename))
+                                    (size (stat:size s)))
+                               (if (= size 0)
+                                   (dump)
+                                   (format #t "Use local copy of file ~A (redownload ~A).\n" filename redownload)))
+                             (dump))
+                         #f))
+            (lambda (key . args) #t))
+          known
+          ;; snarf all uris
+          (let ((uris (call-with-input-file (wot-uri-filename seed) snarf-wot-ids)))
+            ;; (write seed)(newline)
+            ;; (when (not (null? uris))
+            ;;  (write (car uris))(newline))
+            (let ((new (list-ec (: u uris) (if (and
+                                                (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
+                                                (not (member (wot-uri-key u) known)))) u)))
+              (when (not (null? new))
+                (display 'new:)
+                (write (car new))(newline))
+              (when (not (null? known))
+                (display 'known:)
+                (write (car known))(newline)(write (length known))(newline))
+              (set! known (lset-union equal?
+                                      (list-ec (: u new) (wot-uri-key u))
+                                      known))
+              (if (null? new)
+                  known
+                  (append known (map crawl new)))))))))
 
 (define (parse-datehint str)
   (let ((lines (string-split str #\newline)))
@@ -216,5 +216,5 @@ exec guile -e main -s "$0" "$@"
                     seed-id
                     (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/0"))))
       (write (download-by-date-hint seed))
-      (par-map download-by-date-hint
+      (par-map (lambda (x) (map download-by-date-hint x))
                (crawl-wot seed)))))
