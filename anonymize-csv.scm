@@ -94,7 +94,7 @@ exec guile -e main -s "$0" "$@"
 
 (define (main args)
   (let ((infile (if (null? (cdr args))
-                    "trust.csv"
+                    "trust-deduplicated.csv"
                     (second args)))
         (outfile (if (or (null? (cdr args)) (null? (cdr (cdr args))))
                      "trust-anonymized.csv"
