@@ -142,7 +142,7 @@ exec guile -e main -s "$0" "$@"
               (set! known (lset-union equal?
                                       (list-ec (: u new) (wot-uri-key u))
                                       known))
-              (if (or (null? new) (> (length known) 10))
+              (if (null? new)
                   known
                   (lset-union equal? known (map crawl new)))))))))
 
