@@ -134,17 +134,17 @@ exec guile -e main -s "$0" "$@"
                                                 (not (pair? u)) ; TODO: this is a hack. I do not know why u can be the full sxml. Seems to happen with IDs who do not have any trust set.
                                                 (not (member (wot-uri-key u) known)))) u)))
               (when (not (null? new))
-                (display 'new:)
+                (display "new: ")
                 (write (car new))(newline))
               (when (not (null? known))
-                (display 'known:)
+                (display "known: ")
                 (write (car known))(newline)(write (length known))(newline))
               (set! known (lset-union equal?
                                       (list-ec (: u new) (wot-uri-key u))
                                       known))
               (if (null? new)
                   known
-                  (append known (map crawl new)))))))))
+                  (lset-union equal? known (map crawl new)))))))))
 
 (define (parse-datehint str)
   (let ((lines (string-split str #\newline)))
@@ -175,6 +175,7 @@ exec guile -e main -s "$0" "$@"
                (filename (string-append date "/" (wot-uri-key uri) "-" version)))
           (when (not (file-exists? date))
             (mkdir date))
+          (format #t "download to: ~A | for week ~A\n" filename week)
           (let ((data (get url)))
             (when (string? data)
               (let ((port (open-output-file filename)))
@@ -194,18 +195,24 @@ exec guile -e main -s "$0" "$@"
   ;; see http://draketo.de/light/english/freenet/usk-and-date-hints
   ;; Approach: First check whether the ID has a date hint for each year. Then check each weak in the matching years.
   ;; download the versions into directories ordered as YEAR-month-day/SSK@...-WebOfTrust-version
-  (let ((years (iota 10 2016 -1))
-        (weeks (iota 52 1))) ; 52-1
+  (let ((years (iota 10 2016 -1)) ; last 10 years
+        (weeks (iota 52 1))) ; 1-52
     (delete #f ;; only return the filenames of successful downloads 
             (par-map (lambda (year)
                        (let* ((yearuri (datehint-for-key (wot-uri-key uri) year))
                               (hint (get (furl-uri yearuri))))
                          (if (not (string? hint))
                              #f
-                             (delete #f ;; only return the filenames of successful downloads 
-                                     (n-par-map 52 (lambda (week)
-                                                     (download-by-weekly-date-hint uri year week))
-                                                weeks)))))
+                             (let* ((hint-alist (parse-datehint hint))
+                                    (date (assoc-ref hint-alist 'date))
+                                    (month (string->number (list-ref (string-split date #\-) 2)))
+                                    (min-week (* (- month 1) 4))) ; avoid trying to download weeks which cannot be available.
+                               (delete #f ;; only return the filenames of successful downloads 
+                                       (n-par-map 52 (lambda (week)
+                                                       (if (< week min-week) ; avoid weeks earlier than the date in the yearly date hint
+                                                           #f
+                                                           (download-by-weekly-date-hint uri year week)))
+                                                  weeks))))))
                      years))))
 
 (define (main args)
@@ -215,6 +222,6 @@ exec guile -e main -s "$0" "$@"
     (let ((seed (if (string-index seed-id #\/)
                     seed-id
                     (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/0"))))
-      (write (download-by-date-hint seed))
-      (par-map (lambda (x) (map download-by-date-hint x))
+      ;; (write (download-by-date-hint seed))
+      (par-map download-by-date-hint
                (crawl-wot seed)))))
