@@ -206,7 +206,7 @@ exec guile -e main -s "$0" "$@"
                              (let* ((hint-alist (parse-datehint hint))
                                     (date (assoc-ref hint-alist 'date))
                                     (month (string->number (list-ref (string-split date #\-) 2)))
-                                    (min-week (* (- month 1) 4))) ; avoid trying to download weeks which cannot be available.
+                                    (min-week (* month 4))) ; avoid trying to download weeks which cannot be available.
                                (delete #f ;; only return the filenames of successful downloads 
                                        (n-par-map 52 (lambda (week)
                                                        (if (< week min-week) ; avoid weeks earlier than the date in the yearly date hint
@@ -221,7 +221,7 @@ exec guile -e main -s "$0" "$@"
                      (car (cdr args)))))
     (let ((seed (if (string-index seed-id #\/)
                     seed-id
-                    (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/0"))))
+                    (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/-1")))) ; -1 can also return 0
       ;; (write (download-by-date-hint seed))
       (par-map download-by-date-hint
                (crawl-wot seed)))))
