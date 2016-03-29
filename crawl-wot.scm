@@ -222,6 +222,7 @@ exec guile -e main -s "$0" "$@"
     (let ((seed (if (string-index seed-id #\/)
                     seed-id
                     (string-append "USK" (string-drop seed-id 3) "/WebOfTrust/-1")))) ; -1 can also return 0
-      ;; (write (download-by-date-hint seed))
+      ;; (crawl-wot seed))))
+      ;; (write (download-by-date-hint seed)))))
       (par-map download-by-date-hint
                (crawl-wot seed)))))
