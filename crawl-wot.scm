@@ -205,7 +205,7 @@ exec guile -e main -s "$0" "$@"
                              #f
                              (let* ((hint-alist (parse-datehint hint))
                                     (date (assoc-ref hint-alist 'date))
-                                    (month (string->number (list-ref (string-split date #\-) 2)))
+                                    (month (string->number (list-ref (string-split date #\-) 1)))
                                     (min-week (* month 4))) ; avoid trying to download weeks which cannot be available.
                                (delete #f ;; only return the filenames of successful downloads 
                                        (n-par-map 10 (lambda (week)
