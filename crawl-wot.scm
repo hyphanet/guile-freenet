@@ -208,7 +208,7 @@ exec guile -e main -s "$0" "$@"
                                     (month (string->number (list-ref (string-split date #\-) 2)))
                                     (min-week (* month 4))) ; avoid trying to download weeks which cannot be available.
                                (delete #f ;; only return the filenames of successful downloads 
-                                       (n-par-map 52 (lambda (week)
+                                       (n-par-map 10 (lambda (week)
                                                        (if (< week min-week) ; avoid weeks earlier than the date in the yearly date hint
                                                            #f
                                                            (download-by-weekly-date-hint uri year week)))
