@@ -207,6 +207,7 @@ exec guile -e main -s "$0" "$@"
                                     (date (assoc-ref hint-alist 'date))
                                     (month (string->number (list-ref (string-split date #\-) 1)))
                                     (min-week (* month 4))) ; avoid trying to download weeks which cannot be available.
+                               (format #t "Downloading key ~a starting in month ~a for weeks ~a to 52\n" yearuri month min-week)
                                (delete #f ;; only return the filenames of successful downloads 
                                        (n-par-map 10 (lambda (week)
                                                        (if (< week min-week) ; avoid weeks earlier than the date in the yearly date hint
