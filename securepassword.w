@@ -284,11 +284,6 @@ best-of 8 consumes 3 bits of entropy, but creates passwords which are easier to 
                 replace
                     string-replace-substring s (string-take delim 1) " "
                     string-drop delim 1
-     ;; for debugging
-     ;; let : : words : map (λ (x) (letterblocks blockcount)) : iota best-of
-     ;;   ;; downcase the words to sort by phonetics
-     ;;   display : sort words : λ (a b) : > (word-weight (string-downcase a)) (word-weight (string-downcase b))
-     ;;   newline
      car
          sort
              map : λ (x) (letterblocks blockcount)
@@ -305,8 +300,6 @@ define : help args
 Options:
   [<length> [<password-type>]]            create password
    --check <password>                     verify the checksums
-   --weighting-from-corpusfile <filepath> create a new cost string
-   --recreate-corpus-from-weighting       create the corpus from the cost string (for debuging)
    --help                                 show this message
 " : first args
 
