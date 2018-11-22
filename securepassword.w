@@ -242,7 +242,6 @@ define : word-weight word
        let loop
            : s : string-append " " word " "
              cost 0
-           pretty-print s
            cond
              : string-null? : string-drop s 1
                . cost
