@@ -6,6 +6,12 @@ Tools to interact with Freenet from Guile Scheme
 Usage
 -----
 
+### simplest fetch-pull stats
+
+This generates stats with all state stored purely in Freenet and a randomly chosen prefix.
+
+./fetchpull.w
+
 ### fcp.scm 
 
 fcp.scm shows an example of interfacing with Freenet using [FCP][]. fcp.rkt is a version of the same written for racket.
