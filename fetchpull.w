@@ -570,9 +570,9 @@ define-syntax-rule : with-fcp-connection exp ...
 define* : stats->csv stats #:key (target-filename #f)
   . "Format the all duration-entry in stats as csv file.
 
-seconds-since-epoch;duration;days-before;mode
-KSK@...;32;realtime
-KSK@...;40;realtime
+seconds-since-epoch;duration;days-before;mode;success
+KSK@...;32;realtime;false
+KSK@...;40;realtime;true
 "
   define new : not : and target-filename : file-exists? target-filename
   define port
@@ -587,11 +587,12 @@ KSK@...;40;realtime
   let loop : : stats stats
     when : not : null? stats
       let : : s : first stats
-        format port "~a;~a;~f;~a\n"
+        format port "~a;~a;~f;~a;~a\n"
             time->iso today
             duration-entry-key s
             duration-entry-duration s
             duration-entry-mode s
+            duration-entry-success s
       loop : cdr stats
   when target-filename : close-port port
 
