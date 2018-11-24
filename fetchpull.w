@@ -41,7 +41,7 @@ import
     only (ice-9 pretty-print) pretty-print
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
-    only (srfi srfi-1) first second third
+    only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference
     only (rnrs bytevectors) make-bytevector bytevector-length
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string port-eof?
@@ -70,6 +70,9 @@ define : replace-KSK-escaped s
     string-replace-string : string-replace-string s #\+ "-"
         . #\= "-"
         
+define : task-id
+    replace-KSK-escaped : letterblocks-nice 6
+
 define prefix-filename "fetchpull-prefix.txt"
 define prefix-cache #f
 define : prefix
@@ -80,7 +83,7 @@ define : prefix
          read-line : open-input-file prefix-filename
        else
            let
-            : pw : replace-KSK-escaped : letterblocks-nice 6
+            : pw : task-id
               port : open-output-file prefix-filename
             display pw port
             close-port port
@@ -183,7 +186,7 @@ define : message-client-get task URI custom-fields
           list : cons 'URI URI
           ' : Verbosity . 1 ;; get SimpleProgress messages for the tasks
               ReturnType . direct
-              MaxRetries . -1 ;; try indefinitely, with ULPR, essentially long polling
+              MaxRetries . 1 ;; -1 means: try indefinitely, with ULPR, essentially long polling
               Global . true
               Persistence . reboot
           . custom-fields
@@ -196,7 +199,7 @@ define : message-client-get-realtime task URI
           FilterData . false
 
 define supported-messages
-    ' NodeHello
+    ' NodeHello GetFailed DataFound AllData
 
 define : log-warning message things more
          format : current-error-port
@@ -267,7 +270,7 @@ define : processor-put! processor
         when : not : equal? old old-now
             loop : atomic-box-ref message-processors
 
-define : processor-remove! processor
+define : processor-delete! processor
     let loop : : old : atomic-box-ref message-processors
         define old-now : atomic-box-compare-and-swap! message-processors old : delete processor old
         when : not : equal? old old-now
@@ -315,6 +318,95 @@ Options:
         -i    load the script and run an interactive REPL."
            first args
 
+;; timing information (alists)
+define get-succeeded : list
+define get-failed : list
+define put-succeeded : list
+define put-failed : list
+define get-alldata : list ; the actual data, for debugging
+
+define : processor-record-datafound-getdata message
+    cond
+      : equal? 'DataFound : message-type message
+        send-message
+            message-create : message-task message
+                . 'GetRequestStatus #f
+                list : cons 'Global 'true
+        . #f
+      else message
+
+define : current-time-seconds
+    car : gettimeofday
+
+define : processor-record-alldata-time message
+    cond
+      : equal? 'AllData : message-type message
+        set! get-succeeded
+            alist-cons (message-task message) (current-time-seconds) get-succeeded
+        . #f
+      else message
+
+
+define : processor-record-getfailed-time message
+    cond
+      : equal? 'GetFailed : message-type message
+        set! get-failed
+            alist-cons (message-task message) (current-time-seconds) get-failed
+        . #f
+      else message
+
+define-record-type <duration-entry>
+    duration-entry key duration succeeded operation mode
+    . timing-entry?
+    key duration-entry-key
+    duration duration-entry-duration
+    succeeded succeeded-entry-duration
+    operation duration-entry-operation ;; get or put
+    mode duration-entry-mode ;; realtime bulk speehacks
+    
+
+define : time-get keys
+    define start-times : list
+    define : finished-tasks
+        append
+            map car get-succeeded
+            map car get-failed
+    ;; setup a processing chain which saves the time information about the request
+    processor-put! processor-record-datafound-getdata
+    processor-put! processor-record-alldata-time
+    processor-put! processor-record-getfailed-time
+    ;; just use the keys as task-IDs (Identifiers)
+    let loop : (keys keys)
+        when : not : null? keys
+            set! start-times : alist-cons (first keys) (current-time-seconds) start-times
+            send-message
+                message-client-get-realtime (first keys) (first keys)
+            loop (cdr keys)
+    ;; wait for completion
+    let loop : (finished (finished-tasks))
+        when : not : lset<= equal? keys finished
+            let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
+                format : current-error-port
+                    . "~d keys still in flight: ~a\n" (length unfinished) unfinished
+            usleep 1000000
+            loop (finished-tasks)
+    ;; all done: cleanup and take the timing
+    processor-delete! processor-record-getfailed-time
+    processor-delete! processor-record-alldata-time
+    processor-delete! processor-record-datafound-getdata
+    let loop : (keys keys) (times '())
+        if : null? keys
+           . times
+           let :
+             define key : first keys
+             define (gettime L) : cdr : assoc key L
+             define start-time : gettime start-times
+             define finish-time : gettime : append get-succeeded get-failed
+             define succeeded : assoc key get-succeeded
+             loop : cdr keys
+                 cons : duration-entry (first keys) {finish-time - start-time} succeeded 'GET 'realtime
+                      . times
+
 define %this-module : current-module
 define : test
     processor-put! discarding-processor
@@ -334,12 +426,12 @@ define : test
        sleep 30
        send-message : message-disconnect
        doctests-testmod %this-module
-       join-thread fcp-write-thread : + 3 : car : gettimeofday
-       join-thread fcp-read-thread : + 30 : car : gettimeofday
+       join-thread fcp-write-thread : + 30 : current-time-seconds
+       join-thread fcp-read-thread : + 30 : current-time-seconds
        close sock
     
 define : main args
-    if {(length args) > 1}
+    when {(length args) > 1}
        cond 
            : equal? "--help" : second args
              help args
@@ -354,4 +446,23 @@ define : main args
            else
              pretty-print : second args
              set! today : iso->time : second args
+    processor-put! printing-passthrough-processor
+    set! sock : fcp-socket-create
+    let 
+       : 
+         fcp-read-thread
+           begin-thread
+             fcp-read-loop sock
+         fcp-write-thread
+           begin-thread
+             fcp-write-loop sock
+       send-message : message-client-hello
+       send-message : message-watch-global
+       pretty-print
+           time-get
+               list : KSK-for-request (prefix) (current-time) 0 'realtime
+       send-message : message-disconnect
+       join-thread fcp-write-thread : + 1 : current-time-seconds
+       join-thread fcp-read-thread : + 1 : current-time-seconds
+       close sock
              
