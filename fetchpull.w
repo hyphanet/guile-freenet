@@ -39,9 +39,11 @@ import
     only (rnrs bytevectors) make-bytevector bytevector-length
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string
-    only (ice-9 vlist) vlist-null vhash-assq vhash-consq vhash-fold
     only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
-        .  expect expect-regexec expect-timeout expect-select expect-timeout-proc expect-char-proc expect-eof-proc expect-strings-compile-flags
+        .  expect expect-regexec expect-timeout expect-select expect-timeout-proc
+        .  expect-char-proc expect-eof-proc expect-strings-compile-flags
+    ice-9 threads
+    ice-9 atomic
     doctests
 
 define today : current-time time-utc
@@ -94,11 +96,8 @@ define : KSK-for-request prefix time days-before mode
             . days-before mode
 
 
+;; the shared FCP socket
 define sock #f
-
-define : vhash-keys v
-  vhash-fold : lambda (name value l) (cons name l)
-             . '() v
 
 define : fcp-socket-create
     define addrs : getaddrinfo "127.0.0.1" "9482"
@@ -108,12 +107,13 @@ define : fcp-socket-create
     . s
 
 define : call-with-sock thunk
-    . "Calls PROC, ensuring that the variable sock is bound to an FCP socket and closed afterwards"
+    . "Calls PROC, ensuring that the variable sock is bound to an FCP socket. 
+
+To clean up, you must close it and set it to #f by yourself"
     dynamic-wind
-        λ () : set! sock : fcp-socket-create       
+        λ () : when (not sock) : set! sock : fcp-socket-create
         . thunk
-        λ () : close-port sock
-               set! sock #f
+        λ () #f
 
 define-record-type <message>
     message-create task type data fields 
@@ -145,7 +145,7 @@ define : field-split s
         cons s ""
 
 
-define : write-message message sock
+define : write-message message
          display (message-type message) sock
          newline sock
          when : message-task message
@@ -200,25 +200,76 @@ define : read-message port
                     log-warning "unsupported message type" type
                     loop : string->symbol : read-line port
 
+define message-processors
+    make-atomic-box : list
+
+define : process message
+    let loop : (processors (atomic-box-ref message-processors)) (msg message)
+        cond
+          : not msg
+            . #f
+          : null? processors
+            . msg
+          else
+            loop (cdr processors)
+                 (first processors) msg
+
+define : processor-put! processor
+    atomic-box-set! message-processors
+        cons processor : atomic-box-ref message-processors
+
+define : processor-remove! processor
+    atomic-box-set! message-processors
+        delete processor : atomic-box-ref message-processors
+
+define : printing-passthrough-processor message
+    pretty-print message
+    . message
+
+define : printing-discarding-processor message
+    pretty-print message
+    . #f
+
+define : read-fcp-loop
+    let loop :
+        pretty-print : atomic-box-ref message-processors
+        warn-unhandled
+            process
+                read-message sock
+        loop
+
+define : warn-unhandled message
+    when message
+        format : current-error-port
+            . "Unhandled message ~a\n" message
+    . #f
+
 define : help args
     format : current-error-port
            . "~a [--help | --version | --test | YYYY-mm-dd]\n" : first args
 
 define %this-module : current-module
 define : test
-    doctests-testmod %this-module
-    pretty-print : time->iso today
-    pretty-print : time->iso : add-days today 5
-    pretty-print : prefix
-    pretty-print : KSK-for-insert (prefix) today 5 'realtime
-    pretty-print : KSK-for-request (prefix) today 5 'realtime
-    pretty-print : time->iso : iso->time "2018-11-23"
-    call-with-sock 
-        λ ()
-            write-message message-client-hello sock
-            let : : expect-port sock
-              pretty-print : read-message sock ; expect-strings ("EndMessage")
-
+    processor-put! printing-passthrough-processor
+    let 
+       : 
+         fcp-thread
+           begin-thread
+               call-with-sock 
+                   λ ()
+                       write-message message-client-hello
+                       read-fcp-loop
+       
+       doctests-testmod %this-module
+       pretty-print : time->iso today
+       pretty-print : time->iso : add-days today 5
+       pretty-print : prefix
+       pretty-print : KSK-for-insert (prefix) today 5 'realtime
+       pretty-print : KSK-for-request (prefix) today 5 'realtime
+       pretty-print : time->iso : iso->time "2018-11-23"
+       join-thread fcp-thread 30
+       close sock
+    
 define : main args
     if {(length args) > 1}
        cond 
