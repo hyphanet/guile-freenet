@@ -42,7 +42,7 @@ import
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference
-    only (rnrs bytevectors) make-bytevector bytevector-length
+    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string port-eof?
     only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
@@ -194,12 +194,38 @@ define : message-client-get task URI custom-fields
 define : message-client-get-realtime task URI
     message-client-get task URI
         '
-          PriorityClass . 3
+          PriorityClass . 2
           RealTimeFlag . true
           FilterData . false
 
+define : message-client-put task URI data custom-fields
+    message-create task 'ClientPut data
+        append
+          list : cons 'URI URI
+          ` : Verbosity . 1 ;; get SimpleProgress messages for the tasks
+              MaxRetries . 1 ;; default: 10
+              Global . true
+              Persistence . reboot
+              UploadFrom . direct
+          . custom-fields
+
+define : message-client-put-realtime task URI data
+    message-client-put task URI data
+        '
+          PriorityClass . 2
+          RealTimeFlag . true
+          DontCompress . true
+          ExtraInsertsSingleBlock . 0
+          ExtraInsertsSplitfileHeaderBlock . 0
+          Metadata.ContentType . application/octet-stream
+
+define : message-remove-request task
+    message-create task 'RemoveRequest #f
+            list : cons 'Global 'true
+
+
 define supported-messages
-    ' NodeHello GetFailed DataFound AllData
+    ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
 define : log-warning message things more
          format : current-error-port
@@ -220,13 +246,19 @@ define : read-message port
             when : equal? 'Identifier : field-key field
                 set! task
                     field-value field
+            ;; pretty-print : list 'line line 'type type
             cond
               : string-index line #\=
                 readlines : cons (read-line port) lines
-              : member type supported-messages
-                let : : data : if DataLength (get-bytevector-n port DataLength) #f
+              : member type supported-messages ;; line is Data or EndMessage
+                let
+                    : 
+                      data ;; EndMessage has no Data
+                          if : and DataLength : not : equal? "EndMessage" line
+                              get-bytevector-n port (string->number DataLength)
+                              . #f
                     message-create task type data
-                            map field-split lines
+                            map field-split : cdr lines
               else
                     log-warning "unsupported message type" type lines
                     if : port-eof? port
@@ -319,9 +351,9 @@ Options:
            first args
 
 ;; timing information (alists)
-define get-succeeded : list
+define get-successful : list
 define get-failed : list
-define put-succeeded : list
+define put-successful : list
 define put-failed : list
 define get-alldata : list ; the actual data, for debugging
 
@@ -341,8 +373,8 @@ define : current-time-seconds
 define : processor-record-alldata-time message
     cond
       : equal? 'AllData : message-type message
-        set! get-succeeded
-            alist-cons (message-task message) (current-time-seconds) get-succeeded
+        set! get-successful
+            alist-cons (message-task message) (current-time-seconds) get-successful
         . #f
       else message
 
@@ -355,12 +387,43 @@ define : processor-record-getfailed-time message
         . #f
       else message
 
+define : processor-record-putfailed-time message
+    cond
+      : equal? 'PutFailed : message-type message
+        set! put-failed
+            alist-cons (message-task message) (current-time-seconds) put-failed
+        . #f
+      else message
+
+define : processor-record-putsuccessful-time message
+    cond
+      : equal? 'PutSuccessful : message-type message
+        set! put-successful
+            alist-cons (message-task message) (current-time-seconds) put-successful
+        . #f
+      else message
+
+define : processor-record-identifier-collision-time message failed
+    cond
+      : equal? 'IdentifierCollision : message-type message
+        set! failed
+            alist-cons (message-task message) (current-time-seconds) failed
+        . #f
+      else message
+
+define : processor-record-identifier-collision-get-time message
+    processor-record-identifier-collision-time message get-failed
+
+define : processor-record-identifier-collision-put-time message
+    processor-record-identifier-collision-time message put-failed
+
+
 define-record-type <duration-entry>
-    duration-entry key duration succeeded operation mode
+    duration-entry key duration successful operation mode
     . timing-entry?
     key duration-entry-key
     duration duration-entry-duration
-    succeeded succeeded-entry-duration
+    successful successful-entry-duration
     operation duration-entry-operation ;; get or put
     mode duration-entry-mode ;; realtime bulk speehacks
     
@@ -369,15 +432,19 @@ define : time-get keys
     define start-times : list
     define : finished-tasks
         append
-            map car get-succeeded
+            map car get-successful
             map car get-failed
     ;; setup a processing chain which saves the time information about the request
     processor-put! processor-record-datafound-getdata
     processor-put! processor-record-alldata-time
     processor-put! processor-record-getfailed-time
+    processor-put! processor-record-identifier-collision-get-time
     ;; just use the keys as task-IDs (Identifiers)
     let loop : (keys keys)
         when : not : null? keys
+            ;; first remove requests which might still be in the upload or download queue
+            send-message
+               message-remove-request : first keys
             set! start-times : alist-cons (first keys) (current-time-seconds) start-times
             send-message
                 message-client-get-realtime (first keys) (first keys)
@@ -391,6 +458,7 @@ define : time-get keys
             usleep 1000000
             loop (finished-tasks)
     ;; all done: cleanup and take the timing
+    processor-delete! processor-record-identifier-collision-get-time
     processor-delete! processor-record-getfailed-time
     processor-delete! processor-record-alldata-time
     processor-delete! processor-record-datafound-getdata
@@ -401,11 +469,58 @@ define : time-get keys
              define key : first keys
              define (gettime L) : cdr : assoc key L
              define start-time : gettime start-times
-             define finish-time : gettime : append get-succeeded get-failed
-             define succeeded : assoc key get-succeeded
+             define finish-time : gettime : append get-successful get-failed
+             define successful : assoc key get-successful
              loop : cdr keys
-                 cons : duration-entry (first keys) {finish-time - start-time} succeeded 'GET 'realtime
+                 cons : duration-entry (first keys) {finish-time - start-time} successful 'GET 'realtime
                       . times
+
+define : time-put keys
+    define start-times : list
+    define : finished-tasks
+        append
+            map car put-successful
+            map car put-failed
+    ;; setup a processing chain which saves the time information about the request
+    processor-put! processor-record-putsuccessful-time
+    processor-put! processor-record-putfailed-time
+    processor-put! processor-record-identifier-collision-put-time
+    ;; just use the keys as task-IDs (Identifiers)
+    let loop : (keys keys)
+        when : not : null? keys
+            ;; first remove requests which might still be in the upload or download queue
+            send-message
+               message-remove-request : first keys
+            set! start-times : alist-cons (first keys) (current-time-seconds) start-times
+            send-message
+                message-client-put-realtime (first keys) (first keys)
+                    string->utf8 (first keys)
+            loop (cdr keys)
+    ;; wait for completion
+    let loop : (finished (finished-tasks))
+        when : not : lset<= equal? keys finished
+            let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
+                format : current-error-port
+                    . "~d keys still in flight: ~a\n" (length unfinished) unfinished
+            usleep 1000000
+            loop (finished-tasks)
+    ;; all done: cleanup and take the timing
+    processor-delete! processor-record-identifier-collision-put-time
+    processor-delete! processor-record-putfailed-time
+    processor-delete! processor-record-putsuccessful-time
+    let loop : (keys keys) (times '())
+        if : null? keys
+           . times
+           let :
+             define key : first keys
+             define (gettime L) : cdr : assoc key L
+             define start-time : gettime start-times
+             define finish-time : gettime : append put-successful put-failed
+             define successful : assoc key put-successful
+             loop : cdr keys
+                 cons : duration-entry (first keys) {finish-time - start-time} successful 'PUT 'realtime
+                      . times
+
 
 define %this-module : current-module
 define : test
@@ -429,6 +544,28 @@ define : test
        join-thread fcp-write-thread : + 30 : current-time-seconds
        join-thread fcp-read-thread : + 30 : current-time-seconds
        close sock
+
+define : call-with-fcp-connection thunk
+    set! sock : fcp-socket-create
+    let 
+       : 
+         fcp-read-thread
+           begin-thread
+             fcp-read-loop sock
+         fcp-write-thread
+           begin-thread
+             fcp-write-loop sock
+       send-message : message-client-hello
+       send-message : message-watch-global
+       thunk
+       send-message : message-disconnect
+       join-thread fcp-write-thread : + 1 : current-time-seconds
+       join-thread fcp-read-thread : + 1 : current-time-seconds
+       close sock
+
+define-syntax-rule : with-fcp-connection exp ...
+    call-with-fcp-connection
+        λ () exp ...
     
 define : main args
     when {(length args) > 1}
@@ -447,22 +584,11 @@ define : main args
              pretty-print : second args
              set! today : iso->time : second args
     processor-put! printing-passthrough-processor
-    set! sock : fcp-socket-create
-    let 
-       : 
-         fcp-read-thread
-           begin-thread
-             fcp-read-loop sock
-         fcp-write-thread
-           begin-thread
-             fcp-write-loop sock
-       send-message : message-client-hello
-       send-message : message-watch-global
-       pretty-print
-           time-get
-               list : KSK-for-request (prefix) (current-time) 0 'realtime
-       send-message : message-disconnect
-       join-thread fcp-write-thread : + 1 : current-time-seconds
-       join-thread fcp-read-thread : + 1 : current-time-seconds
-       close sock
-             
+    with-fcp-connection
+           pretty-print
+               time-put
+                   list : KSK-for-request (prefix) (current-time) 0 'realtime
+           pretty-print
+               time-get
+                   list : KSK-for-request (prefix) (current-time) 0 'realtime
+
