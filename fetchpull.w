@@ -31,10 +31,17 @@ import
     only (srfi srfi-19) current-date date->string string->date date->time-utc time-utc->date
                       . make-time time-utc time-duration add-duration current-time
     only (securepassword) letterblocks-nice
+    only (srfi srfi-9) define-record-type
     only (ice-9 pretty-print) pretty-print
-    only (ice-9 rdelim) read-line
+    only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
     only (srfi srfi-1) first second third
+    only (rnrs bytevectors) make-bytevector bytevector-length
+    only (rnrs io ports) get-bytevector-all get-bytevector-n
+         . put-bytevector bytevector->string
+    only (ice-9 vlist) vlist-null vhash-assq vhash-consq vhash-fold
+    only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
+        .  expect expect-regexec expect-timeout expect-select expect-timeout-proc expect-char-proc expect-eof-proc expect-strings-compile-flags
     doctests
 
 define today : current-time time-utc
@@ -87,6 +94,111 @@ define : KSK-for-request prefix time days-before mode
             . days-before mode
 
 
+define sock #f
+
+define : vhash-keys v
+  vhash-fold : lambda (name value l) (cons name l)
+             . '() v
+
+define : fcp-socket-create
+    define addrs : getaddrinfo "127.0.0.1" "9482"
+    define addr : first addrs
+    define s : socket (addrinfo:fam addr) (addrinfo:socktype addr) (addrinfo:protocol addr)
+    connect s : addrinfo:addr addr
+    . s
+
+define : call-with-sock thunk
+    . "Calls PROC, ensuring that the variable sock is bound to an FCP socket and closed afterwards"
+    dynamic-wind
+        λ () : set! sock : fcp-socket-create       
+        . thunk
+        λ () : close-port sock
+               set! sock #f
+
+define-record-type <message>
+    message-create task type data fields 
+    . message?
+    task message-task
+    type message-type
+    data message-data
+    fields message-fields
+
+define : format-field field
+    format #f "~a=~a"
+        car field
+        cdr field
+
+define : join-fields fields
+    ## : tests : test-equal "A=B\nX=V" : join-fields : list (cons 'A "B") (cons 'X 'V)
+    string-join
+        map format-field fields
+        . "\n"
+
+define field-key car
+define field-value cdr
+define : field-split s
+  let : : where : string-index s #\=
+     if where
+        cons 
+            string->symbol : substring/shared s 0 where
+            substring/shared s (+ where 1) (string-length s)
+        cons s ""
+
+
+define : write-message message sock
+         display (message-type message) sock
+         newline sock
+         when : message-task message
+             format sock "Identifier=~a\n" 
+                 message-task message
+         display : join-fields : message-fields message
+                 . sock
+         newline sock
+         cond
+           : message-data message
+             format sock "~a\n"
+                 format-field : cons 'DataLength : bytevector-length : message-data message
+             format sock "Data\n"
+             put-bytevector sock : message-data message
+           else
+             display 'EndMessage sock
+             newline sock
+
+define message-client-hello
+    message-create #f 'ClientHello #f
+        list : cons 'Name "FetchpullClient" 
+               cons 'ExpectedVersion "2.0"
+
+define supported-messages
+    ' NodeHello
+
+define : log-warning message things
+         format : current-error-port
+             . "Warning: ~a: ~a\n" message things
+
+define : read-message port
+    let loop : : type : string->symbol : read-line port
+        define DataLength #f
+        define task #f
+        let readlines : : lines : list : read-line port
+            define line : first lines
+            define field : field-split line
+            when : equal? 'DataLength : field-key field
+                set! DataLength
+                    field-value field
+            when : equal? 'Identifier : field-key field
+                set! task
+                    field-value field
+            cond
+              : string-index line #\=
+                readlines : cons (read-line port) lines
+              : member type supported-messages
+                let : : data : if DataLength (get-bytevector-n port DataLength) #f
+                    message-create task type data
+                            map field-split lines
+              else
+                    log-warning "unsupported message type" type
+                    loop : string->symbol : read-line port
 
 define : help args
     format : current-error-port
@@ -101,6 +213,11 @@ define : test
     pretty-print : KSK-for-insert (prefix) today 5 'realtime
     pretty-print : KSK-for-request (prefix) today 5 'realtime
     pretty-print : time->iso : iso->time "2018-11-23"
+    call-with-sock 
+        λ ()
+            write-message message-client-hello sock
+            let : : expect-port sock
+              pretty-print : read-message sock ; expect-strings ("EndMessage")
 
 define : main args
     if {(length args) > 1}
@@ -118,3 +235,4 @@ define : main args
            else
              pretty-print : second args
              set! today : iso->time : second args
+             
