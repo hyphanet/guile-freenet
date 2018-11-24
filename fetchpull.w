@@ -50,6 +50,7 @@ import
         .  expect-char-proc expect-eof-proc expect-strings-compile-flags
     ice-9 threads
     ice-9 atomic
+    only (ice-9 q) make-q enq! deq! q-empty?
     doctests
 
 define today : current-time time-utc
@@ -205,6 +206,23 @@ define : read-message port
                         . #f
                         loop : string->symbol : read-line port
 
+define next-message
+    make-atomic-box #f
+
+define : send-message message
+    ;; wait until the message was retrieved
+    let try : : failed : atomic-box-compare-and-swap! next-message #f message
+        when failed
+            usleep 100
+            try : atomic-box-compare-and-swap! next-message #f message
+
+define : take-message-to-send
+    ;; get the message
+    define msg : atomic-box-ref next-message
+    ;; allow adding another message
+    atomic-box-set! next-message #f
+    . msg
+
 define message-processors
     make-atomic-box : list
 
@@ -220,12 +238,36 @@ define : process message
                  (first processors) msg
 
 define : processor-put! processor
-    atomic-box-set! message-processors
-        cons processor : atomic-box-ref message-processors
+    let loop : : old : atomic-box-ref message-processors
+        define old-now : atomic-box-compare-and-swap! message-processors old : cons processor old
+        when : not : equal? old old-now
+            loop : atomic-box-ref message-processors
 
 define : processor-remove! processor
-    atomic-box-set! message-processors
-        delete processor : atomic-box-ref message-processors
+    let loop : : old : atomic-box-ref message-processors
+        define old-now : atomic-box-compare-and-swap! message-processors old : delete processor old
+        when : not : equal? old old-now
+             loop : atomic-box-ref message-processors
+
+define : fcp-read-loop
+    let loop : : message : read-message sock
+        when message
+            warn-unhandled
+                process message
+            loop : read-message sock
+
+define : fcp-write-loop
+    let loop : : message : take-message-to-send
+        if message
+            write-message message
+            usleep 100
+        loop : take-message-to-send
+
+define : warn-unhandled message
+    when message
+        format : current-error-port
+            . "Unhandled message ~a\n" message
+    . #f
 
 define : printing-passthrough-processor message
     pretty-print message
@@ -235,18 +277,9 @@ define : printing-discarding-processor message
     pretty-print message
     . #f
 
-define : read-fcp-loop
-    let loop : : message : read-message sock
-        when message
-            warn-unhandled
-                process message
-            loop : read-message sock
-
-define : warn-unhandled message
-    when message
-        format : current-error-port
-            . "Unhandled message ~a\n" message
+define : discarding-processor message
     . #f
+
 
 define : help args
     format : current-error-port
@@ -258,18 +291,22 @@ Options:
 
 define %this-module : current-module
 define : test
+    processor-put! discarding-processor
     processor-put! printing-passthrough-processor
     set! sock : fcp-socket-create
     let 
        : 
-         fcp-thread
+         fcp-read-thread
            begin-thread
-             write-message message-client-hello
-             write-message message-disconnect
-             read-fcp-loop
-       
+             fcp-read-loop
+         fcp-write-thread
+           begin-thread
+             fcp-write-loop       
+       send-message message-client-hello
+       send-message message-disconnect
        doctests-testmod %this-module
-       join-thread fcp-thread : + 30 : car : gettimeofday
+       join-thread fcp-write-thread : + 30 : car : gettimeofday
+       join-thread fcp-read-thread : + 30 : car : gettimeofday
        close sock
     
 define : main args
