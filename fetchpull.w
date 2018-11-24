@@ -30,7 +30,7 @@ define design
                     write the times along with the keys (without the prefix) 
                         into insert-times.csv and request-times.csv
                     format as
-                        DATE-as-seconds-since-epoch iii MODE
+                        DATE-as-seconds-since-epoch duration iii MODE
         prefix is generated from securepassword.w and stored in the file fetchpull-prefix.txt
 
 import
@@ -228,7 +228,7 @@ define supported-messages
     ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
 define : log-warning message things more
-         format : current-error-port
+         format : current-output-port
              . "Warning: ~a: ~a\n~a\n" message things more
 
 define : read-message port
@@ -269,18 +269,15 @@ define next-message
     make-atomic-box #f
 
 define : send-message message
-    ;; wait until the message was retrieved
+    ;; wait until the message was retrieved. This only replaces if the previous content was #f. take-message-to-send switches takes the messages
     let try : : failed : atomic-box-compare-and-swap! next-message #f message
         when failed
             usleep 100
             try : atomic-box-compare-and-swap! next-message #f message
 
 define : take-message-to-send
-    ;; get the message
-    define msg : atomic-box-ref next-message
-    ;; allow adding another message
-    atomic-box-set! next-message #f
-    . msg
+    ;; get the message and reset next-message to #f to allow taking another message
+    atomic-box-swap! next-message #f
 
 define message-processors
     make-atomic-box : list
@@ -320,13 +317,12 @@ define : fcp-write-loop sock
         if message
           begin
             write-message message sock
-            write-message message : current-error-port
           usleep 100
         loop : take-message-to-send
 
 define : warn-unhandled message
     when message
-        format : current-error-port
+        format : current-error-port  ;; avoid writing to the error port elsewhere, that causes multithreading problems. Use current-output-port instead
             . "Unhandled message ~a\n" message
     . #f
 
@@ -343,7 +339,7 @@ define : discarding-processor message
 
 
 define : help args
-    format : current-error-port
+    format : current-output-port
            . "~a [-i] [--help | --version | --test | YYYY-mm-dd]
 
 Options:
@@ -453,7 +449,7 @@ define : time-get keys
     let loop : (finished (finished-tasks))
         when : not : lset<= equal? keys finished
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
-                format : current-error-port
+                format : current-output-port
                     . "~d keys still in flight: ~a\n" (length unfinished) unfinished
             usleep 1000000
             loop (finished-tasks)
@@ -471,6 +467,8 @@ define : time-get keys
              define start-time : gettime start-times
              define finish-time : gettime : append get-successful get-failed
              define successful : assoc key get-successful
+             send-message
+                 message-remove-request key
              loop : cdr keys
                  cons : duration-entry (first keys) {finish-time - start-time} successful 'GET 'realtime
                       . times
@@ -500,7 +498,7 @@ define : time-put keys
     let loop : (finished (finished-tasks))
         when : not : lset<= equal? keys finished
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
-                format : current-error-port
+                format : current-output-port
                     . "~d keys still in flight: ~a\n" (length unfinished) unfinished
             usleep 1000000
             loop (finished-tasks)
@@ -517,6 +515,8 @@ define : time-put keys
              define start-time : gettime start-times
              define finish-time : gettime : append put-successful put-failed
              define successful : assoc key put-successful
+             send-message
+                 message-remove-request key
              loop : cdr keys
                  cons : duration-entry (first keys) {finish-time - start-time} successful 'PUT 'realtime
                       . times
@@ -566,6 +566,35 @@ define : call-with-fcp-connection thunk
 define-syntax-rule : with-fcp-connection exp ...
     call-with-fcp-connection
         λ () exp ...
+
+define* : stats->csv stats #:key (target-filename #f)
+  . "Format the all duration-entry in stats as csv file.
+
+seconds-since-epoch;duration;days-before;mode
+KSK@...;32;realtime
+KSK@...;40;realtime
+"
+  define new : not : and target-filename : file-exists? target-filename
+  define port
+      cond 
+        target-filename
+          open-file target-filename "al"
+        else
+          current-output-port
+  when new
+      display "day;key;duration;mode" port
+      newline port          
+  let loop : : stats stats
+    when : not : null? stats
+      let : : s : first stats
+        format port "~a;~a;~f;~a\n"
+            time->iso today
+            duration-entry-key s
+            duration-entry-duration s
+            duration-entry-mode s
+      loop : cdr stats
+  when target-filename : close-port port
+
     
 define : main args
     when {(length args) > 1}
@@ -574,7 +603,7 @@ define : main args
              help args
              exit 0
            : equal? "--version" : second args
-             format : current-error-port
+             format : current-output-port
                     . "~a\n" version
              exit 0
            : equal? "--test" : second args
@@ -584,11 +613,35 @@ define : main args
              pretty-print : second args
              set! today : iso->time : second args
     processor-put! printing-passthrough-processor
-    with-fcp-connection
-           pretty-print
-               time-put
-                   list : KSK-for-request (prefix) (current-time) 0 'realtime
-           pretty-print
-               time-get
-                   list : KSK-for-request (prefix) (current-time) 0 'realtime
+    let : (get-stats '()) (put-stats '())
+      define : stats-get stat
+          set! get-stats : append get-stats stat
+          . stat
+      define : stats-put stat
+          set! put-stats : append put-stats stat
+          . stat
+      with-fcp-connection
+          let loop
+             : modes '(realtime)
+             define days-before
+                 map : λ(x) : expt 2 x
+                     iota 10
+             define : KSK-for-get days
+                 KSK-for-request (prefix) (current-time) days 'realtime
+             define : KSK-for-put days
+                 KSK-for-insert (prefix) (current-time) days 'realtime
+             when : not : null? modes
+               pretty-print
+                  stats-put
+                   time-put
+                        map KSK-for-put days-before
+               pretty-print
+                  stats-get
+                   time-get
+                        map KSK-for-get days-before
+
+      pretty-print get-stats
+      pretty-print put-stats
+      stats->csv get-stats #:target-filename "fetchpull-stats-get.csv"
+      stats->csv put-stats #:target-filename "fetchpull-stats-put.csv"
 
