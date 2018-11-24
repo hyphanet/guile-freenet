@@ -107,7 +107,7 @@ define : KSK-for-request prefix time days-before mode
 define sock #f
 
 define : fcp-socket-create
-    define addrs : getaddrinfo "127.0.0.1" "9482"
+    define addrs : getaddrinfo "127.0.0.1" "9487"
     define addr : first addrs
     define s : socket (addrinfo:fam addr) (addrinfo:socktype addr) (addrinfo:protocol addr)
     connect s : addrinfo:addr addr
