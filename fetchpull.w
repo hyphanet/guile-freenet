@@ -559,8 +559,8 @@ define : call-with-fcp-connection thunk
        send-message : message-watch-global
        thunk
        send-message : message-disconnect
-       join-thread fcp-write-thread : + 1 : current-time-seconds
-       join-thread fcp-read-thread : + 1 : current-time-seconds
+       join-thread fcp-write-thread : + 3 : current-time-seconds
+       join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
 
 define-syntax-rule : with-fcp-connection exp ...
