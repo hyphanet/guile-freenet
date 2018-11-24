@@ -331,7 +331,7 @@ define : test
        send-message : message-client-hello
        send-message : message-watch-global
        send-message : message-client-get-realtime (letterblocks-nice 6) "USK@N82omidQlapADLWIym1u4rXvEQhjoIFbMa5~p1SKoOY,LE3WlYKas1AIdoVX~9wahrTlV5oZYhvJ4AcYYGsBq-w,AQACAAE/irclogs/772/2018-11-23.weechatlog"
-       sleep 10
+       sleep 30
        send-message : message-disconnect
        doctests-testmod %this-module
        join-thread fcp-write-thread : + 3 : car : gettimeofday
