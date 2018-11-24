@@ -119,7 +119,7 @@ define-record-type <message>
     task message-task
     type message-type
     data message-data
-    fields message-fields
+    fields message-fields ;; avoid duplicates: fred joins duplicate fields with ";" to a single value
 
 define : format-field field
     format #f "~a=~a"
@@ -143,15 +143,16 @@ define : field-split s
         cons s ""
 
 
-define : write-message message
+define : write-message message sock
          display (message-type message) sock
          newline sock
          when : message-task message
              format sock "Identifier=~a\n" 
                  message-task message
-         display : join-fields : message-fields message
+         when : not : null? : message-fields message
+             display : join-fields : message-fields message
                  . sock
-         newline sock
+             newline sock
          cond
            : message-data message
              format sock "~a\n"
@@ -162,21 +163,44 @@ define : write-message message
              display 'EndMessage sock
              newline sock
 
-define message-client-hello
+define : message-client-hello
     message-create #f 'ClientHello #f
         list : cons 'Name "FetchpullClient" 
                cons 'ExpectedVersion "2.0"
 
-define message-disconnect
+define : message-watch-global
+    message-create #f 'WatchGlobal #f
+        list : cons 'Enabled "true" 
+               cons 'VerbosityMask 1 ;; simple progress
+
+define : message-disconnect
     message-create #f 'Disconnect #f
         list
+
+define : message-client-get task URI custom-fields
+    message-create task 'ClientGet #f
+        append
+          list : cons 'URI URI
+          ' : Verbosity . 1 ;; get SimpleProgress messages for the tasks
+              ReturnType . direct
+              MaxRetries . -1 ;; try indefinitely, with ULPR, essentially long polling
+              Global . true
+              Persistence . reboot
+          . custom-fields
+
+define : message-client-get-realtime task URI
+    message-client-get task URI
+        '
+          PriorityClass . 3
+          RealTimeFlag . true
+          FilterData . false
 
 define supported-messages
     ' NodeHello
 
-define : log-warning message things
+define : log-warning message things more
          format : current-error-port
-             . "Warning: ~a: ~a\n" message things
+             . "Warning: ~a: ~a\n~a\n" message things more
 
 define : read-message port
   if : port-eof? port
@@ -201,7 +225,7 @@ define : read-message port
                     message-create task type data
                             map field-split lines
               else
-                    log-warning "unsupported message type" type
+                    log-warning "unsupported message type" type lines
                     if : port-eof? port
                         . #f
                         loop : string->symbol : read-line port
@@ -249,18 +273,20 @@ define : processor-remove! processor
         when : not : equal? old old-now
              loop : atomic-box-ref message-processors
 
-define : fcp-read-loop
+define : fcp-read-loop sock
     let loop : : message : read-message sock
         when message
             warn-unhandled
                 process message
             loop : read-message sock
 
-define : fcp-write-loop
+define : fcp-write-loop sock
     let loop : : message : take-message-to-send
         if message
-            write-message message
-            usleep 100
+          begin
+            write-message message sock
+            write-message message : current-error-port
+          usleep 100
         loop : take-message-to-send
 
 define : warn-unhandled message
@@ -298,14 +324,17 @@ define : test
        : 
          fcp-read-thread
            begin-thread
-             fcp-read-loop
+             fcp-read-loop sock
          fcp-write-thread
            begin-thread
-             fcp-write-loop       
-       send-message message-client-hello
-       send-message message-disconnect
+             fcp-write-loop sock
+       send-message : message-client-hello
+       send-message : message-watch-global
+       send-message : message-client-get-realtime (letterblocks-nice 6) "USK@N82omidQlapADLWIym1u4rXvEQhjoIFbMa5~p1SKoOY,LE3WlYKas1AIdoVX~9wahrTlV5oZYhvJ4AcYYGsBq-w,AQACAAE/irclogs/772/2018-11-23.weechatlog"
+       sleep 10
+       send-message : message-disconnect
        doctests-testmod %this-module
-       join-thread fcp-write-thread : + 30 : car : gettimeofday
+       join-thread fcp-write-thread : + 3 : car : gettimeofday
        join-thread fcp-read-thread : + 30 : car : gettimeofday
        close sock
     
