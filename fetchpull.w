@@ -1,7 +1,13 @@
 #!/usr/bin/env bash
 # -*- wisp -*-
 guile -L $(dirname $(realpath "$0")) -c '(import (language wisp spec))'
-exec -a "$0" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -c '' "$@"
+PROG="$0"
+if [[ "$1" == "-i" ]]; then
+    shift
+    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -- "${@}"
+else
+    exec -a "${0}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -c '' "${@}"
+fi;
 ; !#
 
 ;; for emacs (defun test-this-file () (interactive) (save-current-buffer) (async-shell-command (concat (buffer-file-name (current-buffer)) " --test")))
@@ -38,7 +44,7 @@ import
     only (srfi srfi-1) first second third
     only (rnrs bytevectors) make-bytevector bytevector-length
     only (rnrs io ports) get-bytevector-all get-bytevector-n
-         . put-bytevector bytevector->string
+         . put-bytevector bytevector->string port-eof?
     only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
         .  expect expect-regexec expect-timeout expect-select expect-timeout-proc
         .  expect-char-proc expect-eof-proc expect-strings-compile-flags
@@ -106,15 +112,6 @@ define : fcp-socket-create
     connect s : addrinfo:addr addr
     . s
 
-define : call-with-sock thunk
-    . "Calls PROC, ensuring that the variable sock is bound to an FCP socket. 
-
-To clean up, you must close it and set it to #f by yourself"
-    dynamic-wind
-        λ () : when (not sock) : set! sock : fcp-socket-create
-        . thunk
-        λ () #f
-
 define-record-type <message>
     message-create task type data fields 
     . message?
@@ -169,6 +166,10 @@ define message-client-hello
         list : cons 'Name "FetchpullClient" 
                cons 'ExpectedVersion "2.0"
 
+define message-disconnect
+    message-create #f 'Disconnect #f
+        list
+
 define supported-messages
     ' NodeHello
 
@@ -177,6 +178,8 @@ define : log-warning message things
              . "Warning: ~a: ~a\n" message things
 
 define : read-message port
+  if : port-eof? port
+    . #f
     let loop : : type : string->symbol : read-line port
         define DataLength #f
         define task #f
@@ -198,7 +201,9 @@ define : read-message port
                             map field-split lines
               else
                     log-warning "unsupported message type" type
-                    loop : string->symbol : read-line port
+                    if : port-eof? port
+                        . #f
+                        loop : string->symbol : read-line port
 
 define message-processors
     make-atomic-box : list
@@ -231,12 +236,11 @@ define : printing-discarding-processor message
     . #f
 
 define : read-fcp-loop
-    let loop :
-        pretty-print : atomic-box-ref message-processors
-        warn-unhandled
-            process
-                read-message sock
-        loop
+    let loop : : message : read-message sock
+        when message
+            warn-unhandled
+                process message
+            loop : read-message sock
 
 define : warn-unhandled message
     when message
@@ -246,28 +250,26 @@ define : warn-unhandled message
 
 define : help args
     format : current-error-port
-           . "~a [--help | --version | --test | YYYY-mm-dd]\n" : first args
+           . "~a [-i] [--help | --version | --test | YYYY-mm-dd]
+
+Options:
+        -i    load the script and run an interactive REPL."
+           first args
 
 define %this-module : current-module
 define : test
     processor-put! printing-passthrough-processor
+    set! sock : fcp-socket-create
     let 
        : 
          fcp-thread
            begin-thread
-               call-with-sock 
-                   λ ()
-                       write-message message-client-hello
-                       read-fcp-loop
+             write-message message-client-hello
+             write-message message-disconnect
+             read-fcp-loop
        
        doctests-testmod %this-module
-       pretty-print : time->iso today
-       pretty-print : time->iso : add-days today 5
-       pretty-print : prefix
-       pretty-print : KSK-for-insert (prefix) today 5 'realtime
-       pretty-print : KSK-for-request (prefix) today 5 'realtime
-       pretty-print : time->iso : iso->time "2018-11-23"
-       join-thread fcp-thread 30
+       join-thread fcp-thread : + 30 : car : gettimeofday
        close sock
     
 define : main args
