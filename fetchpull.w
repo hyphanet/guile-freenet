@@ -515,7 +515,7 @@ define : time-put keys
              define (gettime L) : cdr : assoc key L
              define start-time : gettime start-times
              define finish-time : gettime : append put-successful put-failed
-             define successful : assoc key put-successful
+             define successful : and (assoc key get-successful) #t ;; forces boolean
              send-message
                  message-remove-request key
              loop : cdr keys
