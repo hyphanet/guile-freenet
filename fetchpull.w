@@ -228,7 +228,7 @@ define : message-remove-request task
 define supported-messages
     ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
-define : log-warning message things more
+define : log-warning message things
          format : current-output-port
              . "Warning: ~a: ~a\n" message things
 
