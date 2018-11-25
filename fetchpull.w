@@ -641,11 +641,9 @@ define : main args
              define : KSK-for-put days
                  KSK-for-insert (prefix) (current-time) days 'realtime
              when : not : null? modes
-               pretty-print
                   stats-put
                    time-put
                         map KSK-for-put days-before
-               pretty-print
                   stats-get
                    time-get
                         map KSK-for-get days-before
