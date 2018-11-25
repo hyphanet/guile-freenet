@@ -451,7 +451,7 @@ define : time-get keys
         when : not : lset<= equal? keys finished
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
-                    . "~d keys still in flight: ~a\n" (length unfinished) unfinished
+                    . "~d download keys still in flight: ~a\n" (length unfinished) unfinished
             usleep 1000000
             loop (finished-tasks)
     ;; all done: cleanup and take the timing
@@ -500,7 +500,7 @@ define : time-put keys
         when : not : lset<= equal? keys finished
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
-                    . "~d keys still in flight: ~a\n" (length unfinished) unfinished
+                    . "~d upload keys still in flight: ~a\n" (length unfinished) unfinished
             usleep 1000000
             loop (finished-tasks)
     ;; all done: cleanup and take the timing
