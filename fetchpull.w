@@ -48,6 +48,7 @@ import
     only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
         .  expect expect-regexec expect-timeout expect-select expect-timeout-proc
         .  expect-char-proc expect-eof-proc expect-strings-compile-flags
+    only (ice-9 regex) string-match match:substring
     ice-9 threads
     ice-9 atomic
     only (ice-9 q) make-q enq! deq! q-empty?
@@ -419,7 +420,7 @@ define-record-type <duration-entry>
     . timing-entry?
     key duration-entry-key
     duration duration-entry-duration
-    successful successful-entry-duration
+    successful duration-entry-success
     operation duration-entry-operation ;; get or put
     mode duration-entry-mode ;; realtime bulk speehacks
     
@@ -570,10 +571,16 @@ define-syntax-rule : with-fcp-connection exp ...
 define* : stats->csv stats #:key (target-filename #f)
   . "Format the all duration-entry in stats as csv file.
 
-seconds-since-epoch;duration;days-before;mode;success
-KSK@...;32;realtime;false
-KSK@...;40;realtime;true
+example:
+date;key;duration;days-before;mode;success
+KSK@...;32;16;realtime;false
+KSK@...;40;32;realtime;true
 "
+  define : days-before key
+      string->number
+          match:substring
+              string-match "uploaded-([0-9]*)-days-before" key
+              . 1
   define new : not : and target-filename : file-exists? target-filename
   define port
       cond 
@@ -582,15 +589,16 @@ KSK@...;40;realtime;true
         else
           current-output-port
   when new
-      display "day;key;duration;mode" port
+      display "day;key;duration;days-before;mode;success" port
       newline port          
   let loop : : stats stats
     when : not : null? stats
       let : : s : first stats
-        format port "~a;~a;~f;~a;~a\n"
+        format port "~a;~a;~f;~d;~a;~a\n"
             time->iso today
             duration-entry-key s
             duration-entry-duration s
+            days-before : duration-entry-key s
             duration-entry-mode s
             duration-entry-success s
       loop : cdr stats
