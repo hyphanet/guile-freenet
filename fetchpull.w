@@ -637,9 +637,9 @@ define : main args
                      map : λ(x) : expt 2 x
                          iota 10
              define : KSK-for-get days
-                 KSK-for-request (prefix) (current-time) days 'realtime
+                 KSK-for-request (prefix) today days 'realtime
              define : KSK-for-put days
-                 KSK-for-insert (prefix) (current-time) days 'realtime
+                 KSK-for-insert (prefix) today days 'realtime
              when : not : null? modes
                   stats-put
                    time-put
