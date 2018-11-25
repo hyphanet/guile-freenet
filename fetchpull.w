@@ -230,7 +230,7 @@ define supported-messages
 
 define : log-warning message things more
          format : current-output-port
-             . "Warning: ~a: ~a\n~a\n" message things more
+             . "Warning: ~a: ~a\n" message things
 
 define : read-message port
   if : port-eof? port
@@ -261,7 +261,7 @@ define : read-message port
                     message-create task type data
                             map field-split : cdr lines
               else
-                    log-warning "unsupported message type" type lines
+                    log-warning "unsupported message type" type
                     if : port-eof? port
                         . #f
                         loop : string->symbol : read-line port
@@ -644,7 +644,6 @@ define : main args
                   stats-put
                    time-put
                         map KSK-for-put days-before
-                  sleep 3 ;; workaround for output race errors
                   stats-get
                    time-get
                         map KSK-for-get days-before
