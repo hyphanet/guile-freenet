@@ -633,8 +633,9 @@ define : main args
           let loop
              : modes '(realtime)
              define days-before
-                 map : λ(x) : expt 2 x
-                     iota 10
+                 cons 0
+                     map : λ(x) : expt 2 x
+                         iota 10
              define : KSK-for-get days
                  KSK-for-request (prefix) (current-time) days 'realtime
              define : KSK-for-put days
