@@ -644,6 +644,7 @@ define : main args
                   stats-put
                    time-put
                         map KSK-for-put days-before
+                  sleep 3 ;; workaround for output race errors
                   stats-get
                    time-get
                         map KSK-for-get days-before
