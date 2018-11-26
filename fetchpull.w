@@ -604,6 +604,10 @@ KSK@...;40;32;realtime;true
       loop : cdr stats
   when target-filename : close-port port
 
+
+define : create-site path
+    . #f
+
     
 define : main args
     when {(length args) > 1}
@@ -617,6 +621,9 @@ define : main args
              exit 0
            : equal? "--test" : second args
              test
+             exit 0
+           : equal? "--site" : second args
+             create-site args
              exit 0
            else
              pretty-print : second args
@@ -636,17 +643,21 @@ define : main args
                  cons 0
                      map : λ(x) : expt 2 x
                          iota 10
-             define : KSK-for-get days
-                 KSK-for-request (prefix) today days 'realtime
-             define : KSK-for-put days
-                 KSK-for-insert (prefix) today days 'realtime
+             define* : KSK-for-get days #:key (append "")
+                 KSK-for-request (string-append (prefix) append) today days 'realtime
+             define* : KSK-for-put days #:key (append "")
+                 KSK-for-insert (string-append (prefix) append) today days 'realtime
              when : not : null? modes
                   stats-put
                    time-put
-                        map KSK-for-put days-before
+                      apply append
+                        map : λ(x) : map KSK-for-put days-before #:append : number->string x
+                              iota 10
                   stats-get
                    time-get
-                        map KSK-for-get days-before
+                      apply append
+                        map : λ(x) : map KSK-for-get days-before #:append : number->string x
+                              iota 10
 
       pretty-print get-stats
       pretty-print put-stats
