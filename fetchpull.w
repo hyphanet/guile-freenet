@@ -651,12 +651,12 @@ define : main args
                   stats-put
                    time-put
                       apply append
-                        map : λ(x) : map λ (y) (KSK-for-put y #:append (number->string x)) days-before 
+                        map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x))) days-before 
                               iota 10
                   stats-get
                    time-get
                       apply append
-                        map : λ(x) : map λ (y) (KSK-for-get y #:append (number->string x)) days-before 
+                        map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x))) days-before 
                               iota 10
 
       pretty-print get-stats
