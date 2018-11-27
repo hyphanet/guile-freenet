@@ -22,4 +22,4 @@ set title "fetchpull: successful requests"
 set term png size 800,600
 set output "fetchpull.png"
 plot "<(grep \\#t fetchpull-stats-get.csv)" using 1:3:(log(($4+1))/log(2)) palette lw 2
-
+quit
