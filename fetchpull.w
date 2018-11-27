@@ -622,6 +622,9 @@ define : website-content port
              p "plotted with "
                  a : @ (href "fetchpull-plot.gnuplot")
                    . "fetchpull-plot.gnuplot"
+             p
+                 a : @ (href "/?newbookmark=USK@lwR9sLnZD3QHveZa1FB0dAHgeck~dFNBg368mY09wSU,0Vq~4FXSUj1-op3QdzqjZsIvrNMYWlnSdUwCl-Z1fYA,AQACAAE/fetchpullstats/8/&desc=fetchpullstats&hasAnActivelink=true")
+                   . "bookmark this freesite"
     . port
 
 define : create-plot
