@@ -654,6 +654,7 @@ define : copy-resources-to path
                         string-append path file-name-separator-string
                             first files
             loop : cdr files
+    sync
 
 define : ensure-directory-exists path
     cond
