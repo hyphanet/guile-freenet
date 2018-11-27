@@ -637,8 +637,17 @@ define : create-plot
     sync
 
 define : copy-resources-to path
-    let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"
-                        "fetchpull-plot.gnuplot" "fetchpull.png"))
+    ;; remove all KSK information from the stats to prevent people from tampering with them
+    let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"))
+        when : not : null? files
+            when : file-exists? : first files
+                let : : new-filename : string-append path file-name-separator-string : first files
+                  copy-file : first files
+                            . new-filename
+                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-realtime/KEY/' " new-filename "\n"
+            loop : cdr files
+    ;; simply copy over the plot and plotting script
+    let loop : (files '("fetchpull-plot.gnuplot" "fetchpull.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
