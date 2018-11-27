@@ -634,6 +634,7 @@ define : create-plot
     display #\newline gnuplot
     close input
     close gnuplot
+    sync
 
 define : copy-resources-to path
     let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"
