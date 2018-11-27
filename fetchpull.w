@@ -45,6 +45,7 @@ import
     only (rnrs bytevectors) make-bytevector bytevector-length string->utf8
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string port-eof?
+    only (ice-9 popen) open-output-pipe
     only (ice-9 expect) expect-strings ;; for quick experimentation. Expect needs additional functions and variables available:
         .  expect expect-regexec expect-timeout expect-select expect-timeout-proc
         .  expect-char-proc expect-eof-proc expect-strings-compile-flags
@@ -52,6 +53,7 @@ import
     ice-9 threads
     ice-9 atomic
     only (ice-9 q) make-q enq! deq! q-empty?
+    sxml simple
     doctests
 
 define today : current-time time-utc
@@ -605,29 +607,90 @@ KSK@...;40;32;realtime;true
   when target-filename : close-port port
 
 
-define : create-site path
-    . #f
+define : website-content port
+  define title "Fetch-Pull-Stats re-woven"
+  sxml->xml
+    ` *TOP*
+        html
+           head : title ,title
+                  meta : @ : charset "utf-8"
+           body : h1 ,title
+             p : img : @ (src "fetchpull.png") (alt "fetch-pull-statistics")
+             p "created with " 
+                 a : @ (href "https://bitbucket.org/ArneBab/freenet-guile/src/default/fetchpull.w") (title "link to project")
+                   . "fetchpull.w"
+             p "plotted with "
+                 a : @ (href "fetchpull-plot.gnuplot")
+                   . "fetchpull-plot.gnuplot"
+    . port
 
+define : create-plot
+    define gnuplot : open-output-pipe "gnuplot"
+    define input : open-input-file "fetchpull-plot.gnuplot"
+    let loop :
+        when : not : port-eof? input
+            display (read-char input) gnuplot
+            loop
+    display #\newline gnuplot
+    close input
+    close gnuplot
+
+define : copy-resources-to path
+    let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"
+                        "fetchpull-plot.gnuplot" "fetchpull.png"))
+        when : not : null? files
+            when : file-exists? : first files
+                copy-file : first files
+                        string-append path file-name-separator-string
+                            first files
+            loop : cdr files
+
+define : ensure-directory-exists path
+    cond
+       : not : file-exists? path
+         mkdir path
+       : not : file-is-directory? path
+         error 'system-error "Selected path ~A is no directory" path
+       else path
+
+define : write-site-to path
+    define filepath : string-append path file-name-separator-string "index.html"
+    define port : open-output-file filepath
+    display "<!doctype html>\n" port
+    website-content port
+    close port
+
+define : create-site path
+    ensure-directory-exists path
+    create-plot
+    copy-resources-to path
+    write-site-to path
+
+define : final-action? args
+   if {(length args) > 1}
+     cond 
+       : equal? "--help" : second args
+         help args
+         . #t
+       : equal? "--version" : second args
+         format : current-output-port
+                . "~a\n" version
+         . #t
+       : equal? "--test" : second args
+         test
+         . #t
+       : equal? "--site" : second args
+         create-site : if {(length args) > 2} (third args) "site"
+         . #t
+       else #f
+     . #f
+       
     
 define : main args
+  when : not : final-action? args
     when {(length args) > 1}
-       cond 
-           : equal? "--help" : second args
-             help args
-             exit 0
-           : equal? "--version" : second args
-             format : current-output-port
-                    . "~a\n" version
-             exit 0
-           : equal? "--test" : second args
-             test
-             exit 0
-           : equal? "--site" : second args
-             create-site args
-             exit 0
-           else
-             pretty-print : second args
-             set! today : iso->time : second args
+         pretty-print : second args
+         set! today : iso->time : second args
     processor-put! printing-passthrough-processor
     let : (get-stats '()) (put-stats '())
       define : stats-get stat

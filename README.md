@@ -10,7 +10,13 @@ Usage
 
 This generates stats with all state stored purely in Freenet and a randomly chosen prefix.
 
-./fetchpull.w
+Gather stats:
+
+    ./fetchpull.w
+
+Process stats and create site (needs gnuplot and grep):
+
+    ./fetchpull.w --site site
 
 ### fcp.scm 
 
