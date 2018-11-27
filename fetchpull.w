@@ -647,6 +647,7 @@ define : copy-resources-to path
                   close : open-output-pipe : string-append "sed -i 's/KSK@.*using-realtime/KEY/' " new-filename "\n"
             loop : cdr files
     ;; simply copy over the plot and plotting script
+    ;; FIXME: the resulting fetchpull.png is empty
     let loop : (files '("fetchpull-plot.gnuplot" "fetchpull.png"))
         when : not : null? files
             when : file-exists? : first files
