@@ -520,7 +520,7 @@ define : time-put mode keys
     define 1MiB : expt 2 20 ;; 1 MiB are about 30 blocks
     define start-times : list
     define : put-message key
-        if : equals? mode 'realtime
+        if : equal? mode 'realtime
              message-client-put-realtime key key : generate-data key 80Bytes
              message-client-put-bulk key key : generate-data key 1MiB
     define : finished-tasks
@@ -782,7 +782,7 @@ define : main args
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x) #:mode mode)) days-before 
                               iota 5
-                 loop : cdr modes
+              loop : cdr modes
 
       pretty-print get-stats
       pretty-print put-stats
