@@ -201,6 +201,13 @@ define : message-client-get-realtime task URI
           RealTimeFlag . true
           FilterData . false
 
+define : message-client-get-bulk task URI
+    message-client-get task URI
+        '
+          PriorityClass . 3
+          RealTimeFlag . false
+          FilterData . false
+
 define : message-client-put task URI data custom-fields
     message-create task 'ClientPut data
         append
@@ -220,6 +227,14 @@ define : message-client-put-realtime task URI data
           DontCompress . true
           ExtraInsertsSingleBlock . 0
           ExtraInsertsSplitfileHeaderBlock . 0
+          Metadata.ContentType . application/octet-stream
+
+define : message-client-put-bulk task URI data
+    message-client-put task URI data
+        '
+          PriorityClass . 3
+          RealTimeFlag . false
+          DontCompress . false
           Metadata.ContentType . application/octet-stream
 
 define : message-remove-request task
@@ -417,6 +432,25 @@ define : processor-record-identifier-collision-put-time message
     processor-record-identifier-collision-time message put-failed
 
 
+define : generate-data seed-string size-bytes-min
+    . "permutate the seed-string randomly to generate bulk data of at least size-bytes-min"
+    define required-permutations {size-bytes-min / (string-length seed-string)}
+    define chars : string->list seed-string
+    define compare : λ (a b) : < (car a) (car b)
+    define data
+        let loop : : permutations : list chars
+            if {(length permutations) >= required-permutations} permutations
+               loop
+                   cons
+                       map cdr
+                         sort
+                           map : λ (x) : cons (random 1.0) x
+                               . chars
+                           . compare
+                       . permutations
+    string->utf8 : string-join (map list->string data) "\n"
+
+
 define-record-type <duration-entry>
     duration-entry key duration successful operation mode
     . timing-entry?
@@ -425,10 +459,14 @@ define-record-type <duration-entry>
     successful duration-entry-success
     operation duration-entry-operation ;; get or put
     mode duration-entry-mode ;; realtime bulk speehacks
-    
 
-define : time-get keys
+
+define* : time-get mode keys
     define start-times : list
+    define : get-message key
+        if : equals? mode 'realtime
+             message-client-get-realtime key key
+             message-client-get-bulk key key
     define : finished-tasks
         append
             map car get-successful
@@ -445,8 +483,9 @@ define : time-get keys
             send-message
                message-remove-request : first keys
             set! start-times : alist-cons (first keys) (current-time-seconds) start-times
+            ;; now request the data
             send-message
-                message-client-get-realtime (first keys) (first keys)
+                get-message (first keys)
             loop (cdr keys)
     ;; wait for completion
     let loop : (finished (finished-tasks))
@@ -476,8 +515,14 @@ define : time-get keys
                  cons : duration-entry (first keys) {finish-time - start-time} successful 'GET 'realtime
                       . times
 
-define : time-put keys
+define : time-put mode keys
+    define 80Bytes 80
+    define 1MiB : expt 2 20 ;; 1 MiB are about 30 blocks
     define start-times : list
+    define : put-message key
+        if : equals? mode 'realtime
+             message-client-put-realtime key key : generate-data key 80Bytes
+             message-client-put-bulk key key : generate-data key 1MiB
     define : finished-tasks
         append
             map car put-successful
@@ -493,9 +538,9 @@ define : time-put keys
             send-message
                message-remove-request : first keys
             set! start-times : alist-cons (first keys) (current-time-seconds) start-times
+            ;; now insert the data
             send-message
-                message-client-put-realtime (first keys) (first keys)
-                    string->utf8 (first keys)
+                put-message (first keys)
             loop (cdr keys)
     ;; wait for completion
     let loop : (finished (finished-tasks))
@@ -716,26 +761,28 @@ define : main args
           . stat
       with-fcp-connection
           let loop
-             : modes '(realtime)
+             : modes '(realtime bulk)
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
                          iota 10
-             define* : KSK-for-get days #:key (append "")
-                 KSK-for-request (string-append (prefix) append) today days 'realtime
-             define* : KSK-for-put days #:key (append "")
-                 KSK-for-insert (string-append (prefix) append) today days 'realtime
+             define* : KSK-for-get days #:key (append "") (mode 'realtime)
+                 KSK-for-request (string-append (prefix) append) today days mode
+             define* : KSK-for-put days #:key (append "") (mode 'realtime)
+                 KSK-for-insert (string-append (prefix) append) today days mode
              when : not : null? modes
+              let : : mode : first modes
                   stats-put
-                   time-put
+                   time-put mode
                       apply append
-                        map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x))) days-before 
-                              iota 10
+                        map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x) #:mode mode)) days-before 
+                              iota 5
                   stats-get
-                   time-get
+                   time-get mode
                       apply append
-                        map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x))) days-before 
-                              iota 10
+                        map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x) #:mode mode)) days-before 
+                              iota 5
+                 loop : cdr modes
 
       pretty-print get-stats
       pretty-print put-stats
