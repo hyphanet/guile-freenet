@@ -464,7 +464,7 @@ define-record-type <duration-entry>
 define* : time-get mode keys
     define start-times : list
     define : get-message key
-        if : equals? mode 'realtime
+        if : equal? mode 'realtime
              message-client-get-realtime key key
              message-client-get-bulk key key
     define : finished-tasks
