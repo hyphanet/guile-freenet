@@ -517,7 +517,7 @@ define* : time-get mode keys
 
 define : time-put mode keys
     define 80Bytes 80
-    define 1MiB : expt 2 20 ;; 1 MiB are about 30 blocks
+    define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
     define start-times : list
     define : put-message key
         if : equal? mode 'realtime
