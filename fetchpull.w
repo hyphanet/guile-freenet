@@ -204,7 +204,7 @@ define : message-client-get-realtime task URI
 define : message-client-get-bulk task URI
     message-client-get task URI
         '
-          PriorityClass . 3
+          PriorityClass . 3 ;; medium
           RealTimeFlag . false
           FilterData . false
 
@@ -232,7 +232,7 @@ define : message-client-put-realtime task URI data
 define : message-client-put-bulk task URI data
     message-client-put task URI data
         '
-          PriorityClass . 3
+          PriorityClass . 3 ;; medium
           RealTimeFlag . false
           DontCompress . false
           Metadata.ContentType . application/octet-stream
