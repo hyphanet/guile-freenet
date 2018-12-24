@@ -42,7 +42,7 @@ import
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference
-    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8 bytevector?
+    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string port-eof?
     only (ice-9 popen) open-output-pipe
@@ -113,7 +113,7 @@ define : KSK-for-request prefix time days-before mode
 define sock #f
 
 define : fcp-socket-create
-    define addrs : getaddrinfo "127.0.0.1" "9482"
+    define addrs : getaddrinfo "127.0.0.1" "9481"
     define addr : first addrs
     define s : socket (addrinfo:fam addr) (addrinfo:socktype addr) (addrinfo:protocol addr)
     connect s : addrinfo:addr addr
@@ -130,9 +130,7 @@ define-record-type <message>
 define : format-field field
     format #f "~a=~a"
         car field
-        if : bytevector? : cdr field
-             format #f "<bytevector-length: ~a>" : bytevector-length : cdr field
-             cdr field
+        cdr field
 
 define : join-fields fields
     ## : tests : test-equal "A=B\nX=V" : join-fields : list (cons 'A "B") (cons 'X 'V)
@@ -694,7 +692,7 @@ define : copy-resources-to path
                 let : : new-filename : string-append path file-name-separator-string : first files
                   copy-file : first files
                             . new-filename
-                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-/KEY-using-/' " new-filename "\n"
+                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-realtime/KEY/' " new-filename "\n"
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting fetchpull.png is empty
