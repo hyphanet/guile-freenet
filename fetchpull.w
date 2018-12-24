@@ -113,7 +113,7 @@ define : KSK-for-request prefix time days-before mode
 define sock #f
 
 define : fcp-socket-create
-    define addrs : getaddrinfo "127.0.0.1" "9481"
+    define addrs : getaddrinfo "127.0.0.1" "9482"
     define addr : first addrs
     define s : socket (addrinfo:fam addr) (addrinfo:socktype addr) (addrinfo:protocol addr)
     connect s : addrinfo:addr addr
@@ -694,7 +694,7 @@ define : copy-resources-to path
                 let : : new-filename : string-append path file-name-separator-string : first files
                   copy-file : first files
                             . new-filename
-                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-realtime/KEY/' " new-filename "\n"
+                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-/KEY-using-/' " new-filename "\n"
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting fetchpull.png is empty
