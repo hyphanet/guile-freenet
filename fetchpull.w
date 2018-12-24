@@ -130,7 +130,9 @@ define-record-type <message>
 define : format-field field
     format #f "~a=~a"
         car field
-        cdr field
+        if : bytevector? : cdr field
+             format #f "<bytevector-length: ~a>" : bytevector-length : cdr field
+             cdr field
 
 define : join-fields fields
     ## : tests : test-equal "A=B\nX=V" : join-fields : list (cons 'A "B") (cons 'X 'V)
