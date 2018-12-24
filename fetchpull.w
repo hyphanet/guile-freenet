@@ -37,7 +37,8 @@ import
     only (srfi srfi-19) current-date date->string string->date date->time-utc time-utc->date
                       . make-time time-utc time-duration add-duration current-time
     only (securepassword) letterblocks-nice
-    only (srfi srfi-9) define-record-type set-record-type-printer!
+    only (srfi srfi-9) define-record-type
+    only (srfi srfi-9 gnu) set-record-type-printer!
     only (ice-9 pretty-print) pretty-print
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
