@@ -42,7 +42,7 @@ import
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference
-    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8
+    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8 bytevector?
     only (rnrs io ports) get-bytevector-all get-bytevector-n
          . put-bytevector bytevector->string port-eof?
     only (ice-9 popen) open-output-pipe
@@ -126,6 +126,18 @@ define-record-type <message>
     type message-type
     data message-data
     fields message-fields ;; avoid duplicates: fred joins duplicate fields with ";" to a single value
+
+;; use a custom printer which avoids printing the full data
+set-record-type-printer! <message>
+  lambda : record port
+    format port "#<<message> task: ~A type: ~A data: ~a, fields: ~A"
+        message-task record
+        message-type record
+        if : bytevector? : message-data record
+             format #f "length=~a" : bytevector-length : message-data record
+             message-data record
+        message-fields record
+
 
 define : format-field field
     format #f "~a=~a"
