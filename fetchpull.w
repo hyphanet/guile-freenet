@@ -525,7 +525,7 @@ define* : time-get mode keys
              send-message
                  message-remove-request key
              loop : cdr keys
-                 cons : duration-entry (first keys) {finish-time - start-time} successful 'GET 'realtime
+                 cons : duration-entry (first keys) {finish-time - start-time} successful 'GET mode
                       . times
 
 define : time-put mode keys
