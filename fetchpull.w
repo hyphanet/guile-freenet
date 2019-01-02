@@ -474,6 +474,11 @@ define-record-type <duration-entry>
     mode duration-entry-mode ;; realtime bulk speehacks
 
 
+define : timeout? timeout-seconds start-times
+    and : not : null? start-times
+        : pair? : car start-times
+        > timeout-seconds : cdr : car start-times
+
 define* : time-get mode keys
     define start-times : list
     define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
@@ -507,7 +512,7 @@ define* : time-get mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d download keys still in flight\n" (length unfinished)
-                when : > timeout-seconds : cdr : car start-times
+                when : not : timeout? timeout-seconds start-times
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
@@ -564,7 +569,7 @@ define : time-put mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d upload keys still in flight\n" (length unfinished)
-                when : > timeout-seconds : cdr : car start-times
+                when : not : timeout? timeout-seconds start-times
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
