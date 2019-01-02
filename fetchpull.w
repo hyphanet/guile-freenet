@@ -476,6 +476,7 @@ define-record-type <duration-entry>
 
 define* : time-get mode keys
     define start-times : list
+    define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
     define : get-message key
         if : equal? mode 'realtime
              message-client-get-realtime key key
@@ -506,8 +507,9 @@ define* : time-get mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d download keys still in flight\n" (length unfinished)
-            usleep 1000000
-            loop (finished-tasks)
+                when : > timeout-seconds : cdr : car start-times
+                    usleep 1000000
+                    loop (finished-tasks)
     ;; all done: cleanup and take the timing
     processor-delete! processor-record-identifier-collision-get-time
     processor-delete! processor-record-getfailed-time
@@ -531,6 +533,7 @@ define* : time-get mode keys
 define : time-put mode keys
     define 80Bytes 80
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
+    define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
     define start-times : list
     define : put-message key
         if : equal? mode 'realtime
@@ -544,7 +547,7 @@ define : time-put mode keys
     processor-put! processor-record-putsuccessful-time
     processor-put! processor-record-putfailed-time
     processor-put! processor-record-identifier-collision-put-time
-    ;; just use the keys as task-IDs (Identifiers)
+    ;; insert all files, using the keys as task-IDs (Identifiers)
     let loop : (keys keys)
         when : not : null? keys
             ;; first remove requests which might still be in the upload or download queue
@@ -561,8 +564,9 @@ define : time-put mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d upload keys still in flight\n" (length unfinished)
-            usleep 1000000
-            loop (finished-tasks)
+                when : > timeout-seconds : cdr : car start-times
+                    usleep 1000000
+                    loop (finished-tasks)
     ;; all done: cleanup and take the timing
     processor-delete! processor-record-identifier-collision-put-time
     processor-delete! processor-record-putfailed-time
