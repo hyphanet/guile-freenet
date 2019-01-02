@@ -352,9 +352,11 @@ define : fcp-write-loop sock
         loop : take-message-to-send
 
 define : warn-unhandled message
-    when : and #f message
+    when message
         format : current-error-port  ;; avoid writing to the error port elsewhere, that causes multithreading problems. Use current-output-port instead
-            . "Unhandled message ~a\n" message
+            . "Unhandled message ~a: ~a\n" 
+            message-type message
+            message-task message
     . #f
 
 define : printing-passthrough-processor message
@@ -476,8 +478,8 @@ define-record-type <duration-entry>
 
 define : timeout? timeout-seconds start-times
     and : not : null? start-times
-          pair? : car start-times
-          > timeout-seconds : cdr : car start-times
+        : pair? : car start-times
+        > timeout-seconds : cdr : car start-times
 
 define* : time-get mode keys
     define start-times : list
