@@ -352,7 +352,7 @@ define : fcp-write-loop sock
         loop : take-message-to-send
 
 define : warn-unhandled message
-    when message
+    when : and #f message
         format : current-error-port  ;; avoid writing to the error port elsewhere, that causes multithreading problems. Use current-output-port instead
             . "Unhandled message ~a\n" message
     . #f
