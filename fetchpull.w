@@ -476,8 +476,8 @@ define-record-type <duration-entry>
 
 define : timeout? timeout-seconds start-times
     and : not : null? start-times
-        : pair? : car start-times
-        > timeout-seconds : cdr : car start-times
+          pair? : car start-times
+          > timeout-seconds : cdr : car start-times
 
 define* : time-get mode keys
     define start-times : list
