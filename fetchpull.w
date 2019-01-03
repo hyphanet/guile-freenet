@@ -514,7 +514,13 @@ define* : time-get mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d download keys still in flight\n" (length unfinished)
-                when : not : timeout? timeout-seconds start-times
+                cond 
+                  : timeout? timeout-seconds start-times
+                    map ;; fail all unfinished
+                        λ : key
+                            set! get-failed  alist-cons key (current-time-seconds) get-failed
+                        . unfinished
+                  else
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
@@ -571,7 +577,13 @@ define : time-put mode keys
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d upload keys still in flight\n" (length unfinished)
-                when : not : timeout? timeout-seconds start-times
+                cond 
+                  : timeout? timeout-seconds start-times
+                    map 
+                        λ : key
+                            set! put-failed  alist-cons key (current-time-seconds) put-failed
+                        . unfinished
+                  else
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
