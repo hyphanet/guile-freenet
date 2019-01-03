@@ -518,7 +518,7 @@ define* : time-get mode keys
                   : timeout? timeout-seconds start-times
                     map ;; fail all unfinished
                         λ : key
-                            set! get-failed  alist-cons key (current-time-seconds) get-failed
+                            set! get-failed : alist-cons key (current-time-seconds) get-failed
                         . unfinished
                   else
                     usleep 1000000
@@ -581,7 +581,7 @@ define : time-put mode keys
                   : timeout? timeout-seconds start-times
                     map 
                         λ : key
-                            set! put-failed  alist-cons key (current-time-seconds) put-failed
+                            set! put-failed : alist-cons key (current-time-seconds) put-failed
                         . unfinished
                   else
                     usleep 1000000
