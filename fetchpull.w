@@ -476,9 +476,10 @@ define-record-type <duration-entry>
     mode duration-entry-mode ;; realtime bulk speehacks
 
 
-define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
+define timeout-seconds 6 ;; 6 hours maximum wait time
 
 define : timeout? timeout-seconds start-times
+    format #t "timeout? ~a + ~a < ~a" timeout-seconds (current-time-seconds) start-times
     and : not : null? start-times
           pair? : car start-times
           < : + timeout-seconds : current-time-seconds
