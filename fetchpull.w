@@ -476,6 +476,8 @@ define-record-type <duration-entry>
     mode duration-entry-mode ;; realtime bulk speehacks
 
 
+define timeout-seconds : * 6 ;; 6 hours maximum wait time
+
 define : timeout? timeout-seconds start-times
     and : not : null? start-times
           pair? : car start-times
@@ -483,7 +485,6 @@ define : timeout? timeout-seconds start-times
 
 define* : time-get mode keys
     define start-times : list
-    define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
     define : get-message key
         if : equal? mode 'realtime
              message-client-get-realtime key key
@@ -546,7 +547,6 @@ define* : time-get mode keys
 define : time-put mode keys
     define 80Bytes 80
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
-    define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
     define start-times : list
     define : put-message key
         if : equal? mode 'realtime
