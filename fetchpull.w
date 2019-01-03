@@ -481,7 +481,8 @@ define timeout-seconds : * 3600 6 ;; 6 hours maximum wait time
 define : timeout? timeout-seconds start-times
     and : not : null? start-times
           pair? : car start-times
-          > timeout-seconds : cdr : car start-times
+          < : + timeout-seconds : current-time-seconds
+              cdr : car start-times
 
 define* : time-get mode keys
     define start-times : list
