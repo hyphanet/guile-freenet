@@ -482,7 +482,7 @@ define : timeout? timeout-seconds start-times
     format #t "timeout? ~a + ~a < ~a" timeout-seconds (current-time-seconds) start-times
     and : not : null? start-times
           pair? : car start-times
-          < : + timeout-seconds : current-time-seconds
+          > : - (current-time-seconds) timeout-seconds
               cdr : car start-times
 
 define* : time-get mode keys
