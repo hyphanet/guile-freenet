@@ -1,4 +1,23 @@
+#!/usr/bin/env bash
+# -*- wisp -*-
+guile -L $(dirname $(realpath "$0")) -c '(import (language wisp spec))'
+PROG="$0"
+if [[ "$1" == "-i" ]]; then
+    shift
+    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -- "${@}"
+else
+    exec -a "${0}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -c '' "${@}"
+fi;
+; !#
 
+;; for emacs (defun test-this-file () (interactive) (save-current-buffer) (async-shell-command (concat (buffer-file-name (current-buffer)) " --test")))
+
+define-module : fetchpull
+    . #:export : main
+
+define version "0.0.0 just-do-it"
+
+define design
     ' 
         keys are KSK@<prefix>--DATE-uploaded-xxx-days-before-using-MODE
         process:
