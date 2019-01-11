@@ -1,23 +1,4 @@
-#!/usr/bin/env bash
-# -*- wisp -*-
-guile -L $(dirname $(realpath "$0")) -c '(import (language wisp spec))'
-PROG="$0"
-if [[ "$1" == "-i" ]]; then
-    shift
-    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -- "${@}"
-else
-    exec -a "${0}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fetchpull)' -c '' "${@}"
-fi;
-; !#
 
-;; for emacs (defun test-this-file () (interactive) (save-current-buffer) (async-shell-command (concat (buffer-file-name (current-buffer)) " --test")))
-
-define-module : fetchpull
-    . #:export : main
-
-define version "0.0.0 just-do-it"
-
-define design
     ' 
         keys are KSK@<prefix>--DATE-uploaded-xxx-days-before-using-MODE
         process:
@@ -815,6 +796,7 @@ define : main args
                  KSK-for-insert (string-append (prefix) append) today days mode
              when : not : null? modes
               let : : mode : first modes
+                  format #t "collecting ~a statistics\n" mode
                   stats-put
                    time-put mode
                       apply append
@@ -826,9 +808,13 @@ define : main args
                         map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x) #:mode mode)) days-before 
                               iota 5
               loop : cdr modes
-
-      pretty-print get-stats
-      pretty-print put-stats
-      stats->csv get-stats #:target-filename "fetchpull-stats-get.csv"
-      stats->csv put-stats #:target-filename "fetchpull-stats-put.csv"
+      
+      format #t "Finished collecting statistics\n"
+      ;; pretty-print get-stats
+      ;; pretty-print put-stats
+      let : (get-statsfile "fetchpull-stats-get.csv") (put-statsfile "fetchpull-stats-put.csv")
+        stats->csv get-stats #:target-filename get-statsfile
+        format #t "Finished writing get statistics to ~a\n" get-statsfile
+        stats->csv put-stats #:target-filename put-statsfile
+        format #t "Finished writing put statistics to ~a\n" put-statsfile
 
