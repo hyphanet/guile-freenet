@@ -259,7 +259,7 @@ define supported-messages
     ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
 define ignored-messages ;; TODO: implement support for these messages
-    ' CompatibilityMode ExpectedDataLength ExpectedHashes ExpectedMIME PersistentGet SendingToNetwork
+    ' CompatibilityMode ExpectedDataLength ExpectedHashes ExpectedMIME PersistentGet SendingToNetwork SimpleProgress 
 
 define : log-warning message things
          format : current-output-port
@@ -798,7 +798,7 @@ define : main args
     when {(length args) > 1}
          pretty-print : second args
          set! today : iso->time : second args
-    processor-put! printing-passthrough-processor
+    ;; processor-put! printing-passthrough-processor
     let : (get-stats '()) (put-stats '())
       define : stats-get stat
           set! get-stats : append get-stats stat
