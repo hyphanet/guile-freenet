@@ -258,6 +258,9 @@ define : message-remove-request task
 define supported-messages
     ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
+define ignored-messages ;; TODO: implement support for these messages
+    ' CompatibilityMode ExpectedDataLength ExpectedHashes ExpectedMIME PersistentGet SendingToNetwork
+
 define : log-warning message things
          format : current-output-port
              . "Warning: ~a: ~a\n" message things
@@ -281,7 +284,7 @@ define : read-message port
             cond
               : string-index line #\=
                 readlines : cons (read-line port) lines
-              : member type supported-messages ;; line is Data or EndMessage
+              : member type supported-messages
                 let
                     : 
                       data ;; EndMessage has no Data
@@ -291,7 +294,8 @@ define : read-message port
                     message-create task type data
                             map field-split : cdr lines
               else
-                    log-warning "unsupported message type" type
+                    when : not : member type ignored-messages
+                           log-warning "unsupported message type" type
                     if : port-eof? port
                         . #f
                         loop : string->symbol : read-line port
