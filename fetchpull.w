@@ -259,7 +259,7 @@ define supported-messages
     ' NodeHello GetFailed DataFound AllData PutSuccessful PutFailed
 
 define ignored-messages ;; TODO: implement support for these messages
-    ' CompatibilityMode ExpectedDataLength ExpectedHashes ExpectedMIME PersistentGet SendingToNetwork SimpleProgress 
+    ' CompatibilityMode ExpectedDataLength ExpectedHashes ExpectedMIME PersistentGet SendingToNetwork SimpleProgress URIGenerated
 
 define : log-warning message things
          format : current-output-port
