@@ -556,11 +556,12 @@ define* : time-get mode keys
 define : time-put mode keys
     define 80Bytes 80
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
+    define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks
     define start-times : list
     define : put-message key
         if : equal? mode 'realtime
              message-client-put-realtime key key : generate-data key 80Bytes
-             message-client-put-bulk key key : generate-data key 1MiB
+             message-client-put-bulk key key : generate-data key 128kiB
     define : finished-tasks
         append
             map car put-successful
