@@ -436,19 +436,21 @@ define : processor-record-putsuccessful-time message
         . #f
       else message
 
-define : processor-record-identifier-collision-time message failed
+define : processor-record-identifier-collision-get-time message
     cond
       : equal? 'IdentifierCollision : message-type message
-        set! failed
-            alist-cons (message-task message) (current-time-seconds) failed
+        set! get-failed
+            alist-cons (message-task message) (current-time-seconds) get-failed
         . #f
       else message
 
-define : processor-record-identifier-collision-get-time message
-    processor-record-identifier-collision-time message get-failed
-
 define : processor-record-identifier-collision-put-time message
-    processor-record-identifier-collision-time message put-failed
+    cond
+      : equal? 'IdentifierCollision : message-type message
+        set! put-failed
+            alist-cons (message-task message) (current-time-seconds) put-failed
+        . #f
+      else message
 
 
 define : generate-data seed-string size-bytes-min
@@ -517,7 +519,7 @@ define* : time-get mode keys
     ;; wait for completion
     let loop : (finished (finished-tasks))
         when : not : lset<= equal? keys finished
-            format #t "debug: lset-intersection equal? keys finished: ~A -> ~a\n" finished (length finished)
+            format #t "debug: lset-intersection equal? keys finished: ~A -> ~a, keys -> \n" finished (length finished) (length keys)
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d download keys still in flight\n" (length unfinished)
