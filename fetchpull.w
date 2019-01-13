@@ -406,8 +406,11 @@ define : current-time-seconds
 define : processor-record-alldata-time message
     cond
       : equal? 'AllData : message-type message
-        set! get-successful
-            alist-cons (message-task message) (current-time-seconds) get-successful
+        let : : task : message-task message
+          format #t "AllData: ~a" task
+          when : not : assoc task get-successful ;; only add if not yet known
+            set! get-successful
+                 alist-cons task (current-time-seconds) get-successful
         . #f
       else message
 
