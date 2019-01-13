@@ -500,6 +500,9 @@ define* : time-get mode keys
         append
             map car get-successful
             map car get-failed
+    ;; cleanup old state
+    set! get-successful : list
+    set! get-failed : list
     ;; setup a processing chain which saves the time information about the request
     processor-put! processor-record-datafound-getdata
     processor-put! processor-record-alldata-time
@@ -568,6 +571,9 @@ define : time-put mode keys
         append
             map car put-successful
             map car put-failed
+    ;; cleanup old state
+    set! get-successful : list
+    set! get-failed : list
     ;; setup a processing chain which saves the time information about the request
     processor-put! processor-record-putsuccessful-time
     processor-put! processor-record-putfailed-time
