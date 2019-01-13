@@ -522,7 +522,7 @@ define* : time-get mode keys
     ;; wait for completion
     let loop : (finished (finished-tasks))
         when : not : lset<= equal? keys finished
-            format #t "debug: lset-intersection equal? keys finished: ~A -> ~a, keys -> ~a\n" finished (length finished) (length keys)
+            format #t "debug: lset-intersection equal? keys finished: ~A -> ~a, keys -> ~a, get-successful -> ~a, get-failed -> ~a\n" finished (length finished) (length keys) (length get-successful) (length put-successful)
             let : : unfinished : lset-difference equal? keys : lset-intersection equal? keys finished
                 format : current-output-port
                     . "~d download keys still in flight\n" (length unfinished)
