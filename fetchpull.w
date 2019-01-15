@@ -681,10 +681,10 @@ define : call-with-fcp-connection thunk
        send-message : message-client-hello
        send-message : message-watch-global
        thunk
-       send-message : message-disconnect
        while : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
            format (current-error-port) "waiting for message to be sent\n"
            usleep 100
+       send-message : message-disconnect
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
@@ -837,30 +837,31 @@ define : main args
       define : stats-put stat
           set! put-stats : append put-stats stat
           . stat
-      with-fcp-connection
-         let loop
+      let loop
              : modes '(realtime bulk)
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
-                         iota 2
+                         iota 10
              define* : KSK-for-get days #:key (append "") (mode 'realtime)
                  KSK-for-request (string-append (prefix) append) today days mode
              define* : KSK-for-put days #:key (append "") (mode 'realtime)
                  KSK-for-insert (string-append (prefix) append) today days mode
              when : not : null? modes
               let : : mode : first modes
+                with-fcp-connection
                   format #t "collecting ~a statistics\n" mode
                   stats-put
                    time-put mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x) #:mode mode)) days-before 
-                              iota 1
+                              iota 5
+                with-fcp-connection
                   stats-get
                    time-get mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x) #:mode mode)) days-before 
-                              iota 1
+                              iota 5
               loop : cdr modes
       
       format #t "Finished collecting statistics\n"
