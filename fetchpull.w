@@ -689,6 +689,9 @@ define : call-with-fcp-connection thunk
        join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
 
+;; FIXME: using new fcp connections in sequential code-parts fails with
+;;        ERROR: In procedure display: Wrong type argument in position 2: #<closed: file 7f106e118770>
+;;        ERROR: In procedure fport_read: Die Verbindung wurde vom Kommunikationspartner zurückgesetzt
 define-syntax-rule : with-fcp-connection exp ...
     call-with-fcp-connection
         λ () exp ...
@@ -837,7 +840,8 @@ define : main args
       define : stats-put stat
           set! put-stats : append put-stats stat
           . stat
-      let loop
+      with-fcp-connection
+         let loop
              : modes '(realtime bulk)
              define days-before
                  cons 0
@@ -849,14 +853,12 @@ define : main args
                  KSK-for-insert (string-append (prefix) append) today days mode
              when : not : null? modes
               let : : mode : first modes
-                with-fcp-connection
                   format #t "collecting ~a statistics\n" mode
                   stats-put
                    time-put mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x) #:mode mode)) days-before 
                               iota 1
-                with-fcp-connection
                   stats-get
                    time-get mode
                       apply append
