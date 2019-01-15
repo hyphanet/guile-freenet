@@ -843,7 +843,7 @@ define : main args
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
-                         iota 10
+                         iota 2
              define* : KSK-for-get days #:key (append "") (mode 'realtime)
                  KSK-for-request (string-append (prefix) append) today days mode
              define* : KSK-for-put days #:key (append "") (mode 'realtime)
@@ -855,12 +855,12 @@ define : main args
                    time-put mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x) #:mode mode)) days-before 
-                              iota 5
+                              iota 1
                   stats-get
                    time-get mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-get y #:append (number->string x) #:mode mode)) days-before 
-                              iota 5
+                              iota 1
               loop : cdr modes
       
       format #t "Finished collecting statistics\n"
