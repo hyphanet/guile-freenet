@@ -866,12 +866,12 @@ define : main args
                               iota 1
               loop : cdr modes
       
-         format #t "Finished collecting statistics\n"
-         ;; pretty-print get-stats
-         ;; pretty-print put-stats
-         let : (get-statsfile "fetchpull-stats-get.csv") (put-statsfile "fetchpull-stats-put.csv")
-           stats->csv get-stats #:target-filename get-statsfile
-           format #t "Finished writing get statistics to ~a\n" get-statsfile
-           stats->csv put-stats #:target-filename put-statsfile
-           format #t "Finished writing put statistics to ~a\n" put-statsfile
+      format #t "Finished collecting statistics\n"
+      ;; pretty-print get-stats
+      ;; pretty-print put-stats
+      let : (get-statsfile "fetchpull-stats-get.csv") (put-statsfile "fetchpull-stats-put.csv")
+        stats->csv get-stats #:target-filename get-statsfile
+        format #t "Finished writing get statistics to ~a\n" get-statsfile
+        stats->csv put-stats #:target-filename put-statsfile
+        format #t "Finished writing put statistics to ~a\n" put-statsfile
 
