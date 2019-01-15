@@ -837,7 +837,8 @@ define : main args
       define : stats-put stat
           set! put-stats : append put-stats stat
           . stat
-      let loop
+      with-fcp-connection
+         let loop
              : modes '(realtime bulk)
              define days-before
                  cons 0
@@ -849,14 +850,12 @@ define : main args
                  KSK-for-insert (string-append (prefix) append) today days mode
              when : not : null? modes
               let : : mode : first modes
-                with-fcp-connection
                   format #t "collecting ~a statistics\n" mode
                   stats-put
                    time-put mode
                       apply append
                         map : λ(x) : map (λ (y) (KSK-for-put y #:append (number->string x) #:mode mode)) days-before 
                               iota 5
-                with-fcp-connection
                   stats-get
                    time-get mode
                       apply append
