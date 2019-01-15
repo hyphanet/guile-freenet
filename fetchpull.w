@@ -398,7 +398,7 @@ define put-successful : list
 define put-failed : list
 define get-alldata : list ; the actual data, for debugging
 
-define : processor-record-datafound-getdata message
+define : processor-datafound-getdata message
     cond
       : equal? 'DataFound : message-type message
         send-message
@@ -521,7 +521,7 @@ define* : time-get mode keys
     set! get-successful : list
     set! get-failed : list
     ;; setup a processing chain which saves the time information about the request
-    processor-put! processor-record-datafound-getdata
+    processor-put! processor-datafound-getdata
     processor-put! processor-record-alldata-time
     processor-put! processor-record-getfailed-time
     ;; just use the keys as task-IDs (Identifiers)
@@ -557,7 +557,7 @@ define* : time-get mode keys
     ;; all done: cleanup and take the timing
     processor-delete! processor-record-getfailed-time
     processor-delete! processor-record-alldata-time
-    processor-delete! processor-record-datafound-getdata
+    processor-delete! processor-datafound-getdata
     remove-all-keys keys
     let loop : (keys keys) (times '())
         if : null? keys
