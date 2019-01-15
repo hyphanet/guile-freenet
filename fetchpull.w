@@ -407,10 +407,9 @@ define : processor-record-alldata-time message
     cond
       : equal? 'AllData : message-type message
         let : : task : message-task message
-          format #t "AllData: ~a" task
           when : not : assoc task get-successful ;; only add if not yet known
             set! get-successful
-                 alist-cons task (current-time-seconds) get-successful
+              alist-cons task (current-time-seconds) get-successful
         . #f
       else message
 
@@ -418,40 +417,40 @@ define : processor-record-alldata-time message
 define : processor-record-getfailed-time message
     cond
       : equal? 'GetFailed : message-type message
-        set! get-failed
-            alist-cons (message-task message) (current-time-seconds) get-failed
+        let : : task : message-task message
+          when : not : assoc task get-failed ;; only add if not yet known
+            set! get-failed
+              alist-cons task (current-time-seconds) get-failed
         . #f
       else message
 
 define : processor-record-putfailed-time message
     cond
       : equal? 'PutFailed : message-type message
-        set! put-failed
-            alist-cons (message-task message) (current-time-seconds) put-failed
+        let : : task : message-task message
+          when : not : assoc task put-failed ;; only add if not yet known
+            set! put-failed
+              alist-cons task (current-time-seconds) put-failed
         . #f
       else message
 
 define : processor-record-putsuccessful-time message
     cond
       : equal? 'PutSuccessful : message-type message
-        set! put-successful
-            alist-cons (message-task message) (current-time-seconds) put-successful
-        . #f
-      else message
-
-define : processor-record-identifier-collision-get-time message
-    cond
-      : equal? 'IdentifierCollision : message-type message
-        set! get-failed
-            alist-cons (message-task message) (current-time-seconds) get-failed
+        let : : task : message-task message
+          when : not : assoc task put-successful ;; only add if not yet known
+            set! put-successful
+              alist-cons task (current-time-seconds) put-successful
         . #f
       else message
 
 define : processor-record-identifier-collision-put-time message
     cond
       : equal? 'IdentifierCollision : message-type message
-        set! put-failed
-            alist-cons (message-task message) (current-time-seconds) put-failed
+        let : : task : message-task message
+          when : not : assoc task put-failed ;; only add if not yet known
+            set! put-failed
+              alist-cons task (current-time-seconds) put-failed
         . #f
       else message
 
@@ -510,7 +509,6 @@ define* : time-get mode keys
     processor-put! processor-record-datafound-getdata
     processor-put! processor-record-alldata-time
     processor-put! processor-record-getfailed-time
-    processor-put! processor-record-identifier-collision-get-time
     ;; just use the keys as task-IDs (Identifiers)
     let loop : (keys keys)
         when : not : null? keys
@@ -542,7 +540,6 @@ define* : time-get mode keys
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
-    processor-delete! processor-record-identifier-collision-get-time
     processor-delete! processor-record-getfailed-time
     processor-delete! processor-record-alldata-time
     processor-delete! processor-record-datafound-getdata
