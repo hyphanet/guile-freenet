@@ -181,8 +181,11 @@ define : write-message message sock
            else
              display 'EndMessage sock
              newline sock
+         atomic-box-set! sending-message #f
          ;; avoid overloading the node
          usleep 1000 ;; max of 1000 messages per second
+
+
 
 define : message-client-hello
     message-create #f 'ClientHello #f
@@ -304,6 +307,8 @@ define : read-message port
 
 define next-message
     make-atomic-box #f
+define sending-message
+    make-atomic-box #f
 
 define : send-message message
     ;; wait until the message was retrieved. This only replaces if the previous content was #f. take-message-to-send switches takes the messages
@@ -314,6 +319,7 @@ define : send-message message
 
 define : take-message-to-send
     ;; get the message and reset next-message to #f to allow taking another message
+    atomic-box-set! sending-message #t ;; set to false again after successful write-message
     atomic-box-swap! next-message #f
 
 define message-processors
@@ -676,6 +682,9 @@ define : call-with-fcp-connection thunk
        send-message : message-watch-global
        thunk
        send-message : message-disconnect
+       while : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
+           format (current-error-port) "waiting for message to be sent\n"
+           usleep 100
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
