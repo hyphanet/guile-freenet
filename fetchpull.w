@@ -354,12 +354,12 @@ define : fcp-read-loop sock
             warn-unhandled
                 process message
             loop : read-message sock
+    format #t "fcp read loop finished: no more messages\n"
 
 define : fcp-write-loop sock
     let loop : : message : take-message-to-send
         if message
-          begin
-            write-message message sock
+          write-message message sock
           usleep 100
         loop : take-message-to-send
 
@@ -682,7 +682,7 @@ define : call-with-fcp-connection thunk
        send-message : message-watch-global
        thunk
        while : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
-           format (current-error-port) "waiting for message to be sent\n"
+           format #t "waiting for message to be sent\n"
            usleep 100
        send-message : message-disconnect
        join-thread fcp-write-thread : + 3 : current-time-seconds
