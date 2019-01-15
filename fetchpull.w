@@ -492,6 +492,12 @@ define : timeout? timeout-seconds start-times
           > : - (current-time-seconds) timeout-seconds
               cdr : car start-times
 
+define : remove-all-keys keys
+    define : remove-key key
+             send-message
+                 message-remove-request key
+    map remove-key keys
+
 define* : time-get mode keys
     define start-times : list
     define : get-message key
@@ -503,6 +509,7 @@ define* : time-get mode keys
             map car get-successful
             map car get-failed
     ;; cleanup old state
+    remove-all-keys keys
     set! get-successful : list
     set! get-failed : list
     ;; setup a processing chain which saves the time information about the request
@@ -543,6 +550,7 @@ define* : time-get mode keys
     processor-delete! processor-record-getfailed-time
     processor-delete! processor-record-alldata-time
     processor-delete! processor-record-datafound-getdata
+    remove-all-keys keys
     let loop : (keys keys) (times '())
         if : null? keys
            . times
@@ -572,8 +580,9 @@ define : time-put mode keys
             map car put-successful
             map car put-failed
     ;; cleanup old state
-    set! get-successful : list
-    set! get-failed : list
+    remove-all-keys keys
+    set! put-successful : list
+    set! put-failed : list
     ;; setup a processing chain which saves the time information about the request
     processor-put! processor-record-putsuccessful-time
     processor-put! processor-record-putfailed-time
@@ -611,6 +620,7 @@ define : time-put mode keys
     processor-delete! processor-record-identifier-collision-put-time
     processor-delete! processor-record-putfailed-time
     processor-delete! processor-record-putsuccessful-time
+    remove-all-keys keys
     let loop : (keys keys) (times '())
         if : null? keys
            . times
