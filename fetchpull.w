@@ -181,6 +181,8 @@ define : write-message message sock
            else
              display 'EndMessage sock
              newline sock
+         ;; avoid overloading the node
+         usleep 1000 ;; max of 1000 messages per second
 
 define : message-client-hello
     message-create #f 'ClientHello #f
