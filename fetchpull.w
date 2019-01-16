@@ -779,7 +779,7 @@ define : copy-resources-to path
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting fetchpull.png is empty
-    let loop : (files '("fetchpull-plot.gnuplot" "fetchpull.png"))
+    let loop : (files '("fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-put.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
