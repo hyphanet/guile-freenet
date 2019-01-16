@@ -245,6 +245,9 @@ define : message-client-put-realtime task URI data
           DontCompress . true
           ExtraInsertsSingleBlock . 0
           ExtraInsertsSplitfileHeaderBlock . 0
+          ;; for realtime do NOT send Metadata.ContentType (or set it
+          ;; to "" -> Metadata.isTrivial()), else you force at least
+          ;; one level redirect.
 
 define : message-client-put-bulk task URI data
     message-client-put task URI data
@@ -848,7 +851,7 @@ define : main args
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
-                         iota 11
+                         iota 10
              define* : KSK-for-get days #:key (append "") (mode 'realtime)
                  KSK-for-request (string-append (prefix) append) today days mode
              define* : KSK-for-put days #:key (append "") (mode 'realtime)
