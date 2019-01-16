@@ -580,9 +580,13 @@ define : time-put mode keys
     define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks
     define start-times : list
     define : put-message key
-        if : equal? mode 'realtime
+        cond
+           : equal? mode 'realtime
              message-client-put-realtime key key : generate-data key 80Bytes
+           : equal? mode 'small
              message-client-put-bulk key key : generate-data key 128kiB
+           else
+             message-client-put-bulk key key : generate-data key 1MiB
     define : finished-tasks
         append
             map car put-successful
@@ -842,7 +846,7 @@ define : main args
           . stat
       with-fcp-connection
          let loop
-             : modes '(realtime bulk)
+             : modes '(realtime small bulk)
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
