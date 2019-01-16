@@ -365,7 +365,7 @@ define : fcp-write-loop sock
 
 define : warn-unhandled message
     when message
-        format : current-error-port  ;; avoid writing to the error port elsewhere, that causes multithreading problems. Use current-output-port instead
+        format #t  ;; avoid writing to the error port elsewhere, that causes multithreading problems. Use current-output-port instead
             . "Unhandled message ~a: ~a\n" 
             message-type message
             message-task message
