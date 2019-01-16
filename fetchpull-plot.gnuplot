@@ -25,7 +25,7 @@ set cblabel "days since upload"
 set title "fetchpull: requests"
 set term png size 800,600
 set output "fetchpull-get.png"
-plot "<(grep \\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "fetch succeeded", "<(grep \\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 2 title "fetch failed"
+plot "<(grep realtime\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "realtime succeeded", "<(grep realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 2 title "realtime failed", "<(grep small\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "small succeeded", "<(grep small\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 2 title "small failed", "<(grep bulk\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "bulk succeeded", "<(grep bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 2 title "bulk failed"
 replot
 # plot inserts
 set output "fetchpull-put.png"
@@ -33,6 +33,6 @@ set title "fetchpull: inserts"
 set ylabel "time to upload (seconds)"
 set xlabel "upload date"
 set cblabel "days until download"
-plot "<(grep \\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "put succeeded", "<(grep \\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "put failed"
+plot "<(grep realtime\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "realtime succeeded", "<(grep realtime\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed", "<(grep small\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "small succeeded", "<(grep small\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "small failed", "<(grep bulk\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "bulk succeeded", "<(grep bulk\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "bulk failed"
 replot
 quit
