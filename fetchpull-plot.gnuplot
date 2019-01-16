@@ -27,6 +27,7 @@ set output "fetchpull-put.png"
 set title "fetchpull: inserts"
 set ylabel "time to upload (seconds)"
 set xlabel "upload date"
+set cblabel "days until download"
 plot "<(grep \\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 2 title "put succeeded", "<(grep \\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 2 title "put failed"
 replot
 quit
