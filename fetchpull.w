@@ -245,7 +245,6 @@ define : message-client-put-realtime task URI data
           DontCompress . true
           ExtraInsertsSingleBlock . 0
           ExtraInsertsSplitfileHeaderBlock . 0
-          Metadata.ContentType . application/octet-stream
 
 define : message-client-put-bulk task URI data
     message-client-put task URI data
@@ -253,7 +252,6 @@ define : message-client-put-bulk task URI data
           PriorityClass . 3 ;; medium
           RealTimeFlag . false
           DontCompress . false
-          Metadata.ContentType . application/octet-stream
 
 define : message-remove-request task
     message-create task 'RemoveRequest #f
