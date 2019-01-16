@@ -351,8 +351,7 @@ define : fcp-read-loop sock
         when message
             warn-unhandled
                 process message
-            loop : read-message sock
-    format #t "fcp read loop finished: no more messages\n"
+        loop : read-message sock
 
 define : fcp-write-loop sock
     let loop : : message : take-message-to-send
