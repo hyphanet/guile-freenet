@@ -742,7 +742,8 @@ define : website-content port
            head : title ,title
                   meta : @ : charset "utf-8"
            body : h1 ,title
-             p : img : @ (src "fetchpull.png") (alt "fetch-pull-statistics")
+             p : img : @ (src "fetchpull-get.png") (alt "fetch-pull download statistics")
+             p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload statistics")
              p "created with " 
                  a : @ (href "https://bitbucket.org/ArneBab/freenet-guile/src/default/fetchpull.w") (title "link to project")
                    . "fetchpull.w"
