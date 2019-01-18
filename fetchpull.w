@@ -555,6 +555,7 @@ define* : time-get mode keys
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
+    format #t "finished trying to fetch ~a keys\n" : length keys
     processor-delete! processor-record-getfailed-time
     processor-delete! processor-record-alldata-time
     processor-delete! processor-datafound-getdata
@@ -629,6 +630,7 @@ define : time-put mode keys
                     usleep 1000000
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
+    format #t "finished trying to insert ~a keys\n" : length keys
     processor-delete! processor-record-identifier-collision-put-time
     processor-delete! processor-record-putfailed-time
     processor-delete! processor-record-putsuccessful-time
