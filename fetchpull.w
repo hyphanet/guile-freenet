@@ -688,8 +688,8 @@ define : call-with-fcp-connection thunk
        send-message : message-watch-global
        thunk
        while : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
-           format #t "waiting for message to be sent\n"
-           usleep 100
+           format #t "waiting for message to be sent: ~a\n" : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
+           usleep 100000
        send-message : message-disconnect
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
