@@ -853,7 +853,7 @@ define : main args
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
-                         iota 10
+                         iota 7
              define* : KSK-for-get days #:key (append "") (mode 'realtime)
                  KSK-for-request (string-append (prefix) append) today days mode
              define* : KSK-for-put days #:key (append "") (mode 'realtime)
