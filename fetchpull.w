@@ -182,7 +182,7 @@ define : write-message message sock
              display 'EndMessage sock
              newline sock
          atomic-box-set! sending-message #f
-         ;; avoid overloading the node
+         ;; avoid overloading the node ;; FIXME: is this actually needed? Just added because it might fix crashes.
          usleep 1000 ;; max of 1000 messages per second
 
 
@@ -580,6 +580,7 @@ define* : time-get mode keys
 define : time-put mode keys
     define 80Bytes 80
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
+    define 512kiB : expt 2 19 ;; 500kiB MiB are about 20 blocks
     define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks
     define start-times : list
     define : put-message key
@@ -589,7 +590,7 @@ define : time-put mode keys
            : equal? mode 'small
              message-client-put-bulk key key : generate-data key 128kiB
            else
-             message-client-put-bulk key key : generate-data key 1MiB
+             message-client-put-bulk key key : generate-data key 512kiB
     define : finished-tasks
         append
             map car put-successful
@@ -690,8 +691,8 @@ define : call-with-fcp-connection thunk
        send-message : message-watch-global
        thunk
        while : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
-           format #t "waiting for message to be sent: ~a\n" : or (atomic-box-ref next-message) (atomic-box-ref sending-message)
-           usleep 100000
+           format #t "waiting for message to be sent: next-message: ~a , sending: ~a\n" (atomic-box-ref next-message) (atomic-box-ref sending-message)
+           sleep 1
        send-message : message-disconnect
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
