@@ -412,6 +412,16 @@ define : processor-datafound-getdata message
         . #f
       else message
 
+define : processor-record-datafound-time message
+    cond
+      : equal? 'DataFound : message-type message
+        let : : task : message-task message
+          when : not : assoc task get-successful ;; only add if not yet known
+            set! get-successful
+              alist-cons task (current-time-seconds) get-successful
+        . #f
+      else message
+
 define : current-time-seconds
     car : gettimeofday
 
@@ -525,8 +535,8 @@ define* : time-get mode keys
     set! get-successful : list
     set! get-failed : list
     ;; setup a processing chain which saves the time information about the request
-    processor-put! processor-datafound-getdata
-    processor-put! processor-record-alldata-time
+    ;; processor-put! processor-datafound-getdata
+    processor-put! processor-record-datafound-time
     processor-put! processor-record-getfailed-time
     ;; just use the keys as task-IDs (Identifiers)
     let loop : (keys keys)
@@ -561,8 +571,8 @@ define* : time-get mode keys
     ;; all done: cleanup and take the timing
     format #t "finished trying to fetch ~a keys\n" : length keys
     processor-delete! processor-record-getfailed-time
-    processor-delete! processor-record-alldata-time
-    processor-delete! processor-datafound-getdata
+    processor-delete! processor-record-datafound-time
+    ;; processor-delete! processor-datafound-getdata
     remove-all-keys keys
     let loop : (keys keys) (times '())
         if : null? keys
