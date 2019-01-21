@@ -195,19 +195,19 @@ define : message-client-hello
 define : message-watch-global
     message-create #f 'WatchGlobal #f
         list : cons 'Enabled "true" 
-               cons 'VerbosityMask 1 ;; simple progress
+               cons 'VerbosityMask 0 ;; simple progress
 
 define : message-disconnect
     message-create #f 'Disconnect #f
         list
 
 define : message-client-get task URI custom-fields
+    ;; https://github.com/freenet/wiki/wiki/FCPv2-ClientGet
     message-create task 'ClientGet #f
         append
           list : cons 'URI URI
-          ' : Verbosity . 1 ;; get SimpleProgress messages for the tasks
+          ' : Verbosity . 0 ;; only be informed when the download is finished
               ReturnType . direct
-              MaxRetries . 1 ;; -1 means: try indefinitely, with ULPR, essentially long polling
               Global . true
               Persistence . reboot
           . custom-fields
@@ -218,6 +218,7 @@ define : message-client-get-realtime task URI
           PriorityClass . 2
           RealTimeFlag . true
           FilterData . false
+          MaxRetries . 0
 
 define : message-client-get-bulk task URI
     message-client-get task URI
@@ -225,14 +226,14 @@ define : message-client-get-bulk task URI
           PriorityClass . 3 ;; medium
           RealTimeFlag . false
           FilterData . false
+          MaxRetries . 1 ;; -1 means: try indefinitely, with ULPR, essentially long polling
 
 define : message-client-put task URI data custom-fields
+    ;; https://github.com/freenet/wiki/wiki/FCPv2-ClientPut
     message-create task 'ClientPut data
         append
           list : cons 'URI URI
-          ` : Verbosity . 1 ;; get SimpleProgress messages for the tasks
-              MaxRetries . 1 ;; default: 10
-              Global . true
+          ` : Global . true
               Persistence . reboot
               UploadFrom . direct
           . custom-fields
@@ -241,6 +242,7 @@ define : message-client-put-realtime task URI data
     message-client-put task URI data
         '
           PriorityClass . 2
+          MaxRetries . 0 ;; default: 10
           RealTimeFlag . true
           DontCompress . true
           ExtraInsertsSingleBlock . 0
