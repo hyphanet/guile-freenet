@@ -360,7 +360,9 @@ define : fcp-write-loop sock
     let loop : : message : take-message-to-send
         if message
           write-message message sock
-          usleep 100
+          begin
+              atomic-box-set! sending-message #f
+              usleep 100
         loop : take-message-to-send
 
 define : warn-unhandled message
