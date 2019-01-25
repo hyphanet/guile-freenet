@@ -795,7 +795,7 @@ define : copy-resources-to path
                 let : : new-filename : string-append path file-name-separator-string : first files
                   copy-file : first files
                             . new-filename
-                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-realtime/KEY/' " new-filename "\n"
+                  close : open-output-pipe : string-append "sed -i 's/KSK@.*using-[^;]*;/KEY/' " new-filename "\n"
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting fetchpull.png is empty
