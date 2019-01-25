@@ -662,7 +662,7 @@ define : time-put mode keys
              send-message
                  message-remove-request key
              loop : cdr keys
-                 cons : duration-entry (first keys) {finish-time - start-time} successful 'PUT 'realtime
+                 cons : duration-entry (first keys) {finish-time - start-time} successful 'PUT mode
                       . times
 
 
