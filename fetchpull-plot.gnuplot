@@ -4,6 +4,8 @@ set timefmt "%Y-%m-%d"
 set format x "%Y-%m-%d"
 # bee swarm plot
 set jitter over 0.5 spread 0.5
+# logarithmic seconds to show both realtime and bulk together
+set logscale y
 # styling
 set xtics rotate by 45 right
 set xlabel "retrieval date"
