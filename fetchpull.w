@@ -274,7 +274,7 @@ define : log-warning message things
              . "Warning: ~a: ~a\n" message things
 
 define : read-message port
-  if : port-eof? port
+  if : or (port-closed? port) (port-eof? port)
     . #f
     let loop : : type : string->symbol : read-line port
         define DataLength #f
@@ -351,12 +351,16 @@ define : processor-delete! processor
         when : not : equal? old old-now
              loop : atomic-box-ref message-processors
 
+define stop-fcp-threads #f
+
 define : fcp-read-loop sock
     let loop : : message : read-message sock
         when message
             warn-unhandled
                 process message
-        loop : read-message sock
+        usleep 10
+        when : not stop-fcp-threads
+            loop : read-message sock
 
 define : fcp-write-loop sock
     let loop : : message : take-message-to-send
@@ -365,7 +369,8 @@ define : fcp-write-loop sock
           begin
               atomic-box-set! sending-message #f
               usleep 100
-        loop : take-message-to-send
+        when : not stop-fcp-threads
+            loop : take-message-to-send
 
 define : warn-unhandled message
     when message
@@ -691,6 +696,7 @@ define : test
 
 define : call-with-fcp-connection thunk
     set! sock : fcp-socket-create
+    set! stop-fcp-threads #f
     let 
        : 
          fcp-read-thread
@@ -706,9 +712,12 @@ define : call-with-fcp-connection thunk
            format #t "waiting for message to be sent: next-message: ~a , sending: ~a\n" (atomic-box-ref next-message) (atomic-box-ref sending-message)
            sleep 1
        send-message : message-disconnect
+       set! stop-fcp-threads #t
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
+       join-thread fcp-write-thread : + 3 : current-time-seconds
+       join-thread fcp-read-thread : + 3 : current-time-seconds
 
 ;; FIXME: using new fcp connections in sequential code-parts fails with
 ;;        ERROR: In procedure display: Wrong type argument in position 2: #<closed: file 7f106e118770>
@@ -784,7 +793,9 @@ define : create-plot
         when : not : port-eof? input
             display (read-char input) gnuplot
             loop
-    display #\newline gnuplot
+    newline gnuplot
+    display "quit" gnuplot
+    newline gnuplot
     close input
     close gnuplot
     sync
