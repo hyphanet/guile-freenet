@@ -368,7 +368,7 @@ define : fcp-write-loop sock
           write-message message sock
           begin
               atomic-box-set! sending-message #f
-              usleep 100
+              usleep 10
         when : not stop-fcp-threads
             loop : take-message-to-send
 
@@ -713,7 +713,7 @@ define : call-with-fcp-connection thunk
            sleep 1
        send-message : message-disconnect
        set! stop-fcp-threads #t
-       usleep 100
+       sleep 3
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
        close sock
