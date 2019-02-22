@@ -714,11 +714,9 @@ define : call-with-fcp-connection thunk
        send-message : message-disconnect
        set! stop-fcp-threads #t
        sleep 3
+       close sock
        join-thread fcp-write-thread : + 3 : current-time-seconds
        join-thread fcp-read-thread : + 3 : current-time-seconds
-       close sock
-       map : λ (thread) : or (thread-exited? thread) : begin (cancel-thread thread) (join-thread thread (+ 3 (current-time-seconds)))
-           list fcp-write-thread fcp-read-thread
 
 ;; FIXME: using new fcp connections in sequential code-parts fails with
 ;;        ERROR: In procedure display: Wrong type argument in position 2: #<closed: file 7f106e118770>
