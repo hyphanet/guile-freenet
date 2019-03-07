@@ -822,7 +822,7 @@ define : create-plot
 
 define : copy-resources-to path
     ;; remove all KSK information from the stats to prevent people from tampering with them
-    let loop : (files '("fetchpull.w" "fetchpull-stats-get.csv" "fetchpull-stats-put.csv"))
+    let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"))
         when : not : null? files
             when : file-exists? : first files
                 let : : new-filename : string-append path file-name-separator-string : first files
@@ -832,7 +832,7 @@ define : copy-resources-to path
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting fetchpull.png is empty
-    let loop : (files '("fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-put.png"))
+    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-put.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
