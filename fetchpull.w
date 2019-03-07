@@ -778,13 +778,13 @@ define : website-content port
                  a : @ (href "https://bitbucket.org/ArneBab/freenet-guile/src/default/fetchpull.w") (title "link to project")
                    . "fetchpull.w"
              p "plotted with "
-                 a : @ (href "fetchpull-plot.gnuplot")
+                 a : @ (href "fetchpull-plot.gnuplot") (title "plotting script for gnuplot")
                    . "fetchpull-plot.gnuplot"
              p "using data from "
-                 a : @ (href "fetchpull-stats-get.csv")
+                 a : @ (href "fetchpull-stats-get.csv") (title "download stats")
                    . "fetchpull-stats-get.csv"
                  . "and"
-                 a : @ (href "fetchpull-stats-put.csv")
+                 a : @ (href "fetchpull-stats-put.csv") (title "upload stats")
                    . "fetchpull-stats-put.csv"
              p
                  a : @ (href "/?newbookmark=USK@lwR9sLnZD3QHveZa1FB0dAHgeck~dFNBg368mY09wSU,0Vq~4FXSUj1-op3QdzqjZsIvrNMYWlnSdUwCl-Z1fYA,AQACAAE/fetchpullstats/8/&desc=fetchpullstats&hasAnActivelink=true")
