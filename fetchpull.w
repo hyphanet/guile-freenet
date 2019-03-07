@@ -787,15 +787,18 @@ define : website-content port
              p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload statistics")
              p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload statistics")
              p "created with " 
-                 a : @ (href "https://bitbucket.org/ArneBab/freenet-guile/src/default/fetchpull.w") (title "link to project")
+                 a : @ (href "fetchpull.w") (title "link to exact file which generated this site")
                    . "fetchpull.w"
+             p "from project "
+                 a : @ (href "https://bitbucket.org/ArneBab/freenet-guile") (title "link to project")
+                   . "guile-fcp"
              p "plotted with "
                  a : @ (href "fetchpull-plot.gnuplot") (title "plotting script for gnuplot")
                    . "fetchpull-plot.gnuplot"
              p "using data from "
                  a : @ (href "fetchpull-stats-get.csv") (title "download stats")
                    . "fetchpull-stats-get.csv"
-                 . "and"
+                 . " and "
                  a : @ (href "fetchpull-stats-put.csv") (title "upload stats")
                    . "fetchpull-stats-put.csv"
              p
@@ -819,7 +822,7 @@ define : create-plot
 
 define : copy-resources-to path
     ;; remove all KSK information from the stats to prevent people from tampering with them
-    let loop : (files '("fetchpull-stats-get.csv" "fetchpull-stats-put.csv"))
+    let loop : (files '("fetchpull.w" "fetchpull-stats-get.csv" "fetchpull-stats-put.csv"))
         when : not : null? files
             when : file-exists? : first files
                 let : : new-filename : string-append path file-name-separator-string : first files
