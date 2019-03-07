@@ -767,8 +767,8 @@ define : website-content port
   sxml->xml
     ` *TOP*
         html
-           head : title ,title
-                  meta : @ : charset "utf-8"
+           head : meta : @ (charset "utf-8")
+                  title ,title
            body : h1 ,title
              p : img : @ (src "fetchpull-get.png") (alt "fetch-pull download statistics")
              p : img : @ (src "fetchpull-get-failed.png") (alt "fetch-pull failed download statistics")
