@@ -630,6 +630,18 @@ define : time-put mode keys
             ;; now insert the data
             send-message
                 put-message (first keys)
+            ;; avoid too many simultaneous inserts at the same time, finish-times are recorded asynchronously
+            cond
+                : equal? mode 'realtime
+                  ;; the typical realtime insert takes 30s, so
+                  ;; sleeping 30s should effectively serialize the
+                  ;; inserts, giving a better estimate of the expected
+                  ;; performance of messaging applications.
+                  sleep 30
+                else ;; wait one minute for other files, while
+                     ;; avoiding to run into the global timeout
+                  let : : insert-count-divisor-with-buffer : * 2 (length keys)
+                    sleep : min 60 {timeout-seconds / insert-count-divisor-with-buffer}
             loop (cdr keys)
     ;; wait for completion
     let loop : (finished (finished-tasks))
@@ -647,7 +659,7 @@ define : time-put mode keys
                                 alist-cons key (current-time-seconds) put-failed
                         . unfinished
                   else
-                    usleep 1000000
+                    sleep 1
                     loop (finished-tasks)
     ;; all done: cleanup and take the timing
     format #t "finished trying to insert ~a keys\n" : length keys
