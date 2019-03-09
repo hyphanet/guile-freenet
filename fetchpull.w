@@ -596,9 +596,9 @@ define* : time-get mode keys
 
 define : time-put mode keys
     define 80Bytes 80
-    define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks
-    define 512kiB : expt 2 19 ;; 500kiB MiB are about 20 blocks
-    define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks
+    define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks, should forward to CHK splitfile, TODO: check with KeyUtils
+    define 512kiB : expt 2 19 ;; 500kiB MiB are about 20 blocks, the KSK is a splitfile
+    define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks, the KSK is a splitfile
     define start-times : list
     define : put-message key
         cond
@@ -607,7 +607,7 @@ define : time-put mode keys
            : equal? mode 'small
              message-client-put-bulk key key : generate-data key 128kiB
            else
-             message-client-put-bulk key key : generate-data key 512kiB
+             message-client-put-bulk key key : generate-data key 1MiB
     define : finished-tasks
         append
             map car put-successful
