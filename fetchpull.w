@@ -595,7 +595,7 @@ define* : time-get mode keys
                       . times
 
 define : time-put mode keys
-    define 80Bytes 80
+    define 80Bytes 80 ;; raw KSK, no other keys needed
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks, should forward to CHK splitfile, TODO: check with KeyUtils
     define 512kiB : expt 2 19 ;; 500kiB MiB are about 20 blocks, the KSK is a splitfile
     define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks, the KSK is a splitfile
