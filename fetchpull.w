@@ -598,7 +598,7 @@ define : time-put mode keys
     define 80Bytes 80 ;; raw KSK, no other keys needed
     define 1MiB : expt 2 20 ;; 1 MiB are about 40 blocks, should forward to CHK splitfile, TODO: check with KeyUtils
     define 512kiB : expt 2 19 ;; 500kiB MiB are about 20 blocks, the KSK is a splitfile
-    define 128kiB : expt 2 17 ;; 128 kiB are about 4 blocks, the KSK is a splitfile
+    define 128kiB : expt 2 17 ;; 128 kiB text are about 4 blocks, the KSK is a splitfile
     define start-times : list
     define : put-message key
         cond
@@ -786,6 +786,17 @@ define : website-content port
              p : img : @ (src "fetchpull-get-failed.png") (alt "fetch-pull failed download statistics")
              p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload statistics")
              p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload statistics")
+             p : img : @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot, realtime")
+             p : img : @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot, small bulk")
+             p : img : @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot, large bulk")
+             h2 "explanation"
+             p "Files uploaded regularly with the download attempted after some delay. 
+Realtime is uploaded with realtime priority, small and bulk with bulk priority. 
+Details are available in fetchpull.w (see sources)"
+             p "realtime is a raw KSK without any redirect. Uploaded and downloaded in realtime mode. This is the fake chat-message: What you would use for interactive status updates and such."
+             p "Small is a KSK splitfiles (a KSK that has the links to 4 CHKs (it’s text data so it compresses really well). Uploaded and downloaded in bulk mode."
+             p "Bulk is a KSK which forwards to a CHK splitfile that needs around 40 blocks."
+             h2 "Sources"
              p "created with " 
                  a : @ (href "fetchpull.w") (title "link to exact file which generated this site")
                    . "fetchpull.w"
