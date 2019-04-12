@@ -842,8 +842,8 @@ define : copy-resources-to path
                   close : open-output-pipe : string-append "sed -i 's/KSK@.*using-[^;]*;/KEY;/' " new-filename "\n"
             loop : cdr files
     ;; simply copy over the plot and plotting script
-    ;; FIXME: the resulting fetchpull.png is empty
-    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-get-failed.png" "fetchpull-put.png" "fetchpull-put-failed.png"))
+    ;; FIXME: the resulting images can be empty, need to copy them manually.
+    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-get-failed.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
