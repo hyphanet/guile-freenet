@@ -793,8 +793,8 @@ define : website-content port
              p "Files uploaded regularly with the download attempted after some delay. 
 Realtime is uploaded with realtime priority, small and bulk with bulk priority. 
 Details are available in fetchpull.w (see sources)"
-             p "realtime is a raw KSK without any redirect. Uploaded and downloaded in realtime mode. This is the fake chat-message: What you would use for interactive status updates and such."
-             p "Small is a KSK splitfiles (a KSK that has the links to 4 CHKs (it’s text data so it compresses really well). Uploaded and downloaded in bulk mode."
+             p "Realtime is a raw KSK without any redirect. Uploaded and downloaded in realtime mode. This is the fake chat-message: What you would use for interactive status updates and such."
+             p "Small is a KSK splitfile (a KSK that has the links to 4 CHKs (it’s text data so it compresses really well). Uploaded and downloaded in bulk mode."
              p "Bulk is a KSK which forwards to a CHK splitfile that needs around 40 blocks."
              h2 "Sources"
              p "created with " 
