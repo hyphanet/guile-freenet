@@ -782,10 +782,14 @@ define : website-content port
            head : meta : @ (charset "utf-8")
                   title ,title
            body : h1 ,title
-             p : img : @ (src "fetchpull-get.png") (alt "fetch-pull download statistics")
-             p : img : @ (src "fetchpull-get-failed.png") (alt "fetch-pull failed download statistics")
-             p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload statistics")
-             p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload statistics")
+             p : img : @ (src "fetchpull-get-realtime.png") (alt "fetch-pull realtime download graph")
+             p : img : @ (src "fetchpull-get-small.png") (alt "fetch-pull small download graph")
+             p : img : @ (src "fetchpull-get-bulk.png") (alt "fetch-pull bulk download graph")
+             p : img : @ (src "fetchpull-get-failed-realtime.png") (alt "fetch-pull failed realtime download graph")
+             p : img : @ (src "fetchpull-get-failed-small.png") (alt "fetch-pull failed small download graph")
+             p : img : @ (src "fetchpull-get-failed-bulk.png") (alt "fetch-pull failed bulk download graph")
+             p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload graph")
+             p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload graph")
              p : img : @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot, realtime")
              p : img : @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot, small bulk")
              p : img : @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot, large bulk")
@@ -843,7 +847,7 @@ define : copy-resources-to path
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting images can be empty, need to copy them manually.
-    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get.png" "fetchpull-get-failed.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png"))
+    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get-realtime.png" "fetchpull-get-small.png" "fetchpull-get-bulk.png" "fetchpull-get-failed-realtime.png" "fetchpull-get-failed-small.png" "fetchpull-get-failed-bulk.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
