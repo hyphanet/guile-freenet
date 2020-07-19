@@ -106,6 +106,9 @@ define : main args
   processor-put! record-successful-download
   processor-put! remove-successful-tasks-from-queue
   when : not : final-action? args
+    ;; setup the FCP connection. Anything inside this scope can
+    ;; communicate directly with Freenet via FCP, other interaction
+    ;; must be done through processing procedures as setup above.
     with-fcp-connection
         ;; get the ball rolling
         send-message
