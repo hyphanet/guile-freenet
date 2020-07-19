@@ -18,11 +18,14 @@ exec -a "${0}" guile -L $(dirname $(realpath "$0")) -e '(fcp-example)' -c '' "${
              send-message processor-put! processor-delete!
              printing-passthrough-processor printing-discarding-processor 
              discarding-processor processor-nodehello-printer
-             processor-datafound-getdata 
+             processor-datafound-getdata
+             node-ip-set! node-port-set!
              task-id
              call-with-fcp-connection with-fcp-connection)
+    (only (ice-9 pretty-print) pretty-print)
     (only (srfi srfi-1) first second third assoc)
     (only (srfi srfi-26) cut)
+    (srfi srfi-37 );; commandline handling
     (only (rnrs bytevectors) string->utf8 utf8->string))
 
 
@@ -68,7 +71,36 @@ exec -a "${0}" guile -L $(dirname $(realpath "$0")) -e '(fcp-example)' -c '' "${
   (processor-put! record-successful-download)
   (processor-put! remove-successful-tasks-from-queue))
 
+
+;; commandline handling via srfi-37
+(define options
+    (list
+        (option '(#\V "version") #f #f
+            (λ (opt name args loads)
+                (display "Guile FCP version 0.2\n")
+                (quit)))
+        (option '(#\h "help") #f #f
+            (λ (opt name args loads)
+                (display "Usage: ./fcp-example.w [-h | --help] [-V | --version] [--host=IP_OR_HOSTNAME | -H IP_OR_HOSTNAME] [--port=PORT | -P PORT]\n")
+                (quit)))
+        (option '(#\P "port") #t #f
+            (λ (opt name arg loads)
+                (node-port-set! arg)
+                loads))
+        (option '(#\H "host") #t #f
+            (λ (opt name arg loads)
+                (node-ip-set! arg)
+                loads))))
+
+
 (define (main args)
+  (define arguments
+    (args-fold (cdr args)
+              options
+              (lambda (opt name arg loads)
+                (error "Unrecognized option `~A'" name))
+              (lambda (op loads) (cons op loads))
+              '()))
   (setup-handlers)
   ;; open the FCP connection. Anything inside this scope can
   ;; communicate directly with Freenet via FCP, other interaction

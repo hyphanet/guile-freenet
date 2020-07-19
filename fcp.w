@@ -26,6 +26,7 @@ define-module : fcp
       . discarding-processor processor-nodehello-printer
       . processor-datafound-getdata 
       . task-id
+      . node-ip-set! node-port-set!
       . call-with-fcp-connection with-fcp-connection
 
 define version "0.0.0 just-do-it"
@@ -545,7 +546,12 @@ define : final-action? args
          test
          . #t
        else #f
-       
+
+define : node-port-set! node-port
+    set! port node-port
+define : node-ip-set! node-ip
+    set! ip node-ip
+
     
 define : main args
   define put-task : task-id

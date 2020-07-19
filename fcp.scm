@@ -17,7 +17,8 @@ exec -a "${0}" guile -L $(dirname $(realpath "$0")) -e '(fcp)' -c '' "${@}"
       send-message processor-put! processor-delete!
       printing-passthrough-processor printing-discarding-processor 
       discarding-processor processor-nodehello-printer
-      processor-datafound-getdata 
+      processor-datafound-getdata
+      node-ip-set! node-port-set!
       task-id
       call-with-fcp-connection with-fcp-connection))
 
@@ -539,7 +540,11 @@ Options:
          #t)
        (else #f))))
        
-    
+(define (node-ip-set! node-ip)
+    (set! ip node-ip))
+(define (node-port-set! node-port)
+    (set! port node-port))
+
 (define (main args)
   (define put-task (task-id))
   (define get-task (task-id))
