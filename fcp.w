@@ -542,19 +542,19 @@ define : main args
   define get-task : task-id
   define key : string-append "KSK@" put-task
   define successful #f
-  define : request-successful-put message
+  define : request-successful-upload message
     cond
         : equal? 'PutSuccessful : message-type message
           let : : fields : message-fields message
               when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
                   pretty-print message
                   send-message
-                      message-remove-request : message-task message
-                  send-message
                       message-client-get-realtime get-task key
+                  send-message
+                      message-remove-request : message-task message
               . #f
         else message
-  define : record-successful-get message
+  define : record-successful-download message
     cond
         : equal? 'AllData : message-type message
           let : : task : message-task message
@@ -568,13 +568,16 @@ define : main args
                       message-remove-request task
               . #f
         else message
+  ;; standard processorrs
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
-  processor-put! request-successful-put
   processor-put! processor-datafound-getdata ;; immediately request data from successfull get requests
-  processor-put! record-successful-get
+  ;; custom processors
+  processor-put! request-successful-upload
+  processor-put! record-successful-download
   when : not : final-action? args
     with-fcp-connection
+        ;; get the ball rolling
         send-message
             message-client-put-realtime put-task key
                 string->utf8 : string-append "Hello " key
