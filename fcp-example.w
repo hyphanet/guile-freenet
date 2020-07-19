@@ -66,7 +66,7 @@ define : main args
   define : request-successful-upload message
       if : equal? 'PutSuccessful : message-type message
            let : : fields : message-fields message
-             when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
+             when : and=> (assoc 'URI fields) : λ (uri-cel) : equal? key (cdr uri-cel)
                     pretty-print message
                     send-message
                          message-client-get-realtime get-task key
