@@ -84,7 +84,7 @@ define : main args
     when : member (message-type message) '(AllData PutSuccessful)
            send-message : message-remove-request : message-task message
     . message
-  ;; standard processorrs
+  ;; standard processors
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
   ;; immediately request data from successfull get requests
