@@ -51,13 +51,13 @@ define : remove-successful-tasks-from-queue message
          send-message : message-remove-request : message-task message
   . message
 
+define put-task : task-id
+define get-task : task-id
+define key : string-append "KSK@" put-task
+define successful #f
 
-define : round-trip
-  define put-task : task-id
-  define get-task : task-id
-  define key : string-append "KSK@" put-task
-  define successful #f
-  ;; setup interaction: standard processors
+define : setup-handlers
+  ;; standard processors
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
   ;; immediately request data from successfull get requests
@@ -66,6 +66,9 @@ define : round-trip
   processor-put! request-successful-upload
   processor-put! record-successful-download
   processor-put! remove-successful-tasks-from-queue
+
+define : main args
+  setup-handlers
   ;; setup the FCP connection. Anything inside this scope can
   ;; communicate directly with Freenet via FCP, other interaction
   ;; must be done through processing procedures as setup above.
@@ -77,6 +80,3 @@ define : round-trip
       while : not successful
           display "."
           sleep 1
-
-define : main args
-    rount-trip
