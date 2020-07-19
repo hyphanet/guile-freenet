@@ -30,9 +30,8 @@ import
              . processor-datafound-getdata 
              . task-id
              . call-with-fcp-connection with-fcp-connection
-    only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference take
+    only (srfi srfi-1) first second third assoc
     only (rnrs bytevectors) string->utf8 utf8->string
-    doctests
 
 define : help args
     format : current-output-port
