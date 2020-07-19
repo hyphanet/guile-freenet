@@ -22,6 +22,7 @@ import
              . task-id
              . call-with-fcp-connection with-fcp-connection
     only (srfi srfi-1) first second third assoc
+    only (srfi srfi-26) cut
     only (rnrs bytevectors) string->utf8 utf8->string
 
 
