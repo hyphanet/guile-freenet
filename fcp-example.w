@@ -24,37 +24,40 @@ import
     only (srfi srfi-1) first second third assoc
     only (rnrs bytevectors) string->utf8 utf8->string
 
-    
-define : main args
+
+define : request-successful-upload message
+    . "When the put succeeds, download the data."
+    if : equal? 'PutSuccessful : message-type message
+         let : : fields : message-fields message
+           when : and=> (assoc 'URI fields) : λ (uri-cel) : equal? key (cdr uri-cel)
+                  send-message
+                       message-client-get-realtime get-task key
+           . #f
+         . message
+
+define : record-successful-download message
+    . "When the download succeeds, display the result"
+    if : equal? 'AllData : message-type message
+         let : : task : message-task message
+           when : equal? task get-task
+                  format #t "Received Message: ~a\n" : utf8->string (message-data message)
+                  set! successful #t
+           . #f
+         . message
+
+define : remove-successful-tasks-from-queue message
+  . "Cleanup the task because we use the global queue for easier debugging"
+  when : member (message-type message) '(AllData PutSuccessful)
+         send-message : message-remove-request : message-task message
+  . message
+
+
+define : round-trip
   define put-task : task-id
   define get-task : task-id
   define key : string-append "KSK@" put-task
   define successful #f
-  ;; setup interaction:
-  ;; when the put succeeds, download the data.
-  define : request-successful-upload message
-      if : equal? 'PutSuccessful : message-type message
-           let : : fields : message-fields message
-             when : and=> (assoc 'URI fields) : λ (uri-cel) : equal? key (cdr uri-cel)
-                    send-message
-                         message-client-get-realtime get-task key
-             . #f
-           . message
-  ;; when the download succeeds, display the result and 
-  define : record-successful-download message
-      if : equal? 'AllData : message-type message
-           let : : task : message-task message
-             when : equal? task get-task
-                    format #t "Received Message: ~a\n" : utf8->string (message-data message)
-                    set! successful #t
-             . #f
-           . message
-  ;; cleanup the task because we use the global queue for easier debugging
-  define : remove-successful-tasks-from-queue message
-    when : member (message-type message) '(AllData PutSuccessful)
-           send-message : message-remove-request : message-task message
-    . message
-  ;; standard processors
+  ;; setup interaction: standard processors
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
   ;; immediately request data from successfull get requests
@@ -74,3 +77,6 @@ define : main args
       while : not successful
           display "."
           sleep 1
+
+define : main args
+    rount-trip
