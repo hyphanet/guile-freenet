@@ -31,13 +31,8 @@ import
              . task-id
              . call-with-fcp-connection with-fcp-connection
     only (ice-9 pretty-print) pretty-print truncated-print
-    only (ice-9 iconv) string->bytevector
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference take
-    only (rnrs bytevectors) make-bytevector bytevector-length string->utf8 utf8->string bytevector?
-    only (rnrs io ports) get-bytevector-all get-bytevector-n
-         . put-bytevector bytevector->string port-eof?
-    only (ice-9 popen) open-output-pipe
-    only (ice-9 regex) string-match match:substring
+    only (rnrs bytevectors) string->utf8 utf8->string
     doctests
 
 define : help args
@@ -69,28 +64,26 @@ define : main args
   ;; setup interaction:
   ;; when the put succeeds, download the data.
   define : request-successful-upload message
-    cond
-        : equal? 'PutSuccessful : message-type message
-          let : : fields : message-fields message
-              when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
+    if : equal? 'PutSuccessful : message-type message
+         let : : fields : message-fields message
+           when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
                   pretty-print message
                   send-message
-                      message-client-get-realtime get-task key
-              . #f
-        else message
+                       message-client-get-realtime get-task key
+           . #f
+         . message
   ;; when the download succeeds, display the result and 
   define : record-successful-download message
-    cond
-        : equal? 'AllData : message-type message
-          let : : task : message-task message
-              when : equal? task get-task
+    if : equal? 'AllData : message-type message
+         let : : task : message-task message
+           when : equal? task get-task
                   pretty-print message
                   display "Data: "
                   truncated-print : utf8->string (message-data message)
                   newline
                   set! successful #t
-              . #f
-        else message
+           . #f
+         . message
   ;; cleanup the task because we use the global queue for easier debugging
   define : remove-successful-tasks-from-queue message
     when : member (message-type message) '(AllData PutSuccessful)
@@ -116,4 +109,4 @@ define : main args
                 string->utf8 : string-append "Hello " key
         while : not successful
             display "."
-            sleep 10
+            sleep 1 ;; relaxed heartbeat
