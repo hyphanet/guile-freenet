@@ -17,8 +17,6 @@ fi;
 define-module : fcp-example
     . #:export : main
 
-define version "0.0.0 just-do-it"
-
 import
     only (fcp) message-create message-task message-type message-data message-fields
              . message-client-get  message-client-get-realtime message-client-get-bulk 
@@ -33,26 +31,6 @@ import
     only (srfi srfi-1) first second third assoc
     only (rnrs bytevectors) string->utf8 utf8->string
 
-define : help args
-    format : current-output-port
-           . "~a [-i] [--help | --version | --test | YYYY-mm-dd]
-
-Options:
-        -i    load the script and run an interactive REPL."
-           first args
-
-define : final-action? args
-   if {(length args) <= 1} #f
-     cond 
-       : equal? "--help" : second args
-         help args
-         . #t
-       : equal? "--version" : second args
-         format : current-output-port
-                . "~a\n" version
-         . #t
-       else #f
-       
     
 define : main args
   define put-task : task-id
@@ -103,4 +81,4 @@ define : main args
                 string->utf8 : string-append "Hello " key
         while : not successful
             display "."
-            sleep 1 ;; relaxed heartbeat
+            sleep 1
