@@ -30,7 +30,6 @@ import
              . processor-datafound-getdata 
              . task-id
              . call-with-fcp-connection with-fcp-connection
-    only (ice-9 pretty-print) pretty-print truncated-print
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference take
     only (rnrs bytevectors) string->utf8 utf8->string
     doctests
@@ -67,7 +66,6 @@ define : main args
       if : equal? 'PutSuccessful : message-type message
            let : : fields : message-fields message
              when : and=> (assoc 'URI fields) : λ (uri-cel) : equal? key (cdr uri-cel)
-                    pretty-print message
                     send-message
                          message-client-get-realtime get-task key
              . #f
@@ -77,10 +75,7 @@ define : main args
       if : equal? 'AllData : message-type message
            let : : task : message-task message
              when : equal? task get-task
-                    pretty-print message
-                    display "Data: "
-                    truncated-print : utf8->string (message-data message)
-                    newline
+                    format #t "Received Message: ~a\n" : utf8->string (message-data message)
                     set! successful #t
              . #f
            . message
