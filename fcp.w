@@ -571,7 +571,8 @@ define : main args
   ;; standard processorrs
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
-  processor-put! processor-datafound-getdata ;; immediately request data from successfull get requests
+  ;; immediately request data from successfull get requests
+  processor-put! processor-datafound-getdata
   ;; custom processors
   processor-put! request-successful-upload
   processor-put! record-successful-download
