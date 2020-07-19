@@ -2,14 +2,7 @@
 # -*- wisp -*-
 # A Freenet Client Protocol library for Guile Scheme.
 
-guile -L $(dirname $(realpath "$0")) -c '(import (language wisp spec))'
-PROG="$0"
-if [[ "$1" == "-i" ]]; then
-    shift
-    exec -a "${PROG}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fcp-example)' -- "${@}"
-else
-    exec -a "${0}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fcp-example)' -c '' "${@}"
-fi;
+exec -a "${0}" guile -L $(dirname $(realpath "$0")) --language=wisp -x .w -e '(fcp-example)' -c '' "${@}"
 ; !#
 
 ;; for emacs (defun test-this-file () (interactive) (save-current-buffer) (async-shell-command (concat (buffer-file-name (current-buffer)) " --test")))
@@ -70,15 +63,14 @@ define : main args
   processor-put! request-successful-upload
   processor-put! record-successful-download
   processor-put! remove-successful-tasks-from-queue
-  when : not : final-action? args
-    ;; setup the FCP connection. Anything inside this scope can
-    ;; communicate directly with Freenet via FCP, other interaction
-    ;; must be done through processing procedures as setup above.
-    with-fcp-connection
-        ;; get the ball rolling
-        send-message
-            message-client-put-realtime put-task key
-                string->utf8 : string-append "Hello " key
-        while : not successful
-            display "."
-            sleep 1
+  ;; setup the FCP connection. Anything inside this scope can
+  ;; communicate directly with Freenet via FCP, other interaction
+  ;; must be done through processing procedures as setup above.
+  with-fcp-connection
+      ;; get the ball rolling
+      send-message
+          message-client-put-realtime put-task key
+              string->utf8 : string-append "Hello " key
+      while : not successful
+          display "."
+          sleep 1
