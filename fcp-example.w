@@ -81,7 +81,14 @@ define options
                 quit
         option '(#\h "help") #f #f
             λ (opt name args loads)
-                display "Usage: ./fcp-example.w [-h | --help] [-V | --version] [--host=IP_OR_HOSTNAME | -H IP_OR_HOSTNAME] [--port=PORT | -P PORT]\n"
+                format #t "Usage: ~a [options] 
+                
+Options: 
+    -h --help                                 show this dialog
+    -V --version                              show the version
+     -H IP_OR_HOSTNAME --host=IP_OR_HOSTNAME  set the node address
+    -P PORT --port=PORT                       set the FCP port
+" : car : program-arguments
                 quit
         option '(#\P "port") #t #f
             λ (opt name arg loads)
