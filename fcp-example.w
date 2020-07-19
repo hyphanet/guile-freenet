@@ -81,8 +81,8 @@ define options
                 quit
         option '(#\h "help") #f #f
             λ (opt name args loads)
-                format #t "Usage: ~a [options] 
-                
+                format #t "Usage: ~a [options]
+
 Options: 
     -h --help                                 show this dialog
     -V --version                              show the version
