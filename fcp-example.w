@@ -69,7 +69,7 @@ define : setup-handlers
 
 define : main args
   setup-handlers
-  ;; setup the FCP connection. Anything inside this scope can
+  ;; open the FCP connection. Anything inside this scope can
   ;; communicate directly with Freenet via FCP, other interaction
   ;; must be done through processing procedures as setup above.
   with-fcp-connection
