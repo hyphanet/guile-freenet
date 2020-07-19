@@ -66,6 +66,8 @@ define : main args
   define get-task : task-id
   define key : string-append "KSK@" put-task
   define successful #f
+  ;; setup interaction:
+  ;; when the put succeeds, download the data.
   define : request-successful-upload message
     cond
         : equal? 'PutSuccessful : message-type message
@@ -74,10 +76,9 @@ define : main args
                   pretty-print message
                   send-message
                       message-client-get-realtime get-task key
-                  send-message
-                      message-remove-request : message-task message
               . #f
         else message
+  ;; when the download succeeds, display the result and 
   define : record-successful-download message
     cond
         : equal? 'AllData : message-type message
@@ -88,10 +89,13 @@ define : main args
                   truncated-print : utf8->string (message-data message)
                   newline
                   set! successful #t
-                  send-message
-                      message-remove-request task
               . #f
         else message
+  ;; cleanup the task because we use the global queue for easier debugging
+  define : remove-successful-tasks-from-queue message
+    when : member (message-type message) '(AllData PutSuccessful)
+           send-message : message-remove-request : message-task message
+    . message
   ;; standard processorrs
   processor-put! printing-discarding-processor
   processor-put! processor-nodehello-printer
@@ -100,6 +104,7 @@ define : main args
   ;; custom processors
   processor-put! request-successful-upload
   processor-put! record-successful-download
+  processor-put! remove-successful-tasks-from-queue
   when : not : final-action? args
     with-fcp-connection
         ;; get the ball rolling
