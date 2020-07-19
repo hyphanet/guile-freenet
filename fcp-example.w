@@ -64,26 +64,26 @@ define : main args
   ;; setup interaction:
   ;; when the put succeeds, download the data.
   define : request-successful-upload message
-    if : equal? 'PutSuccessful : message-type message
-         let : : fields : message-fields message
-           when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
-                  pretty-print message
-                  send-message
-                       message-client-get-realtime get-task key
-           . #f
-         . message
+      if : equal? 'PutSuccessful : message-type message
+           let : : fields : message-fields message
+             when : and=> (assoc 'URI fields) : λ (uri) : equal? key : cdr uri
+                    pretty-print message
+                    send-message
+                         message-client-get-realtime get-task key
+             . #f
+           . message
   ;; when the download succeeds, display the result and 
   define : record-successful-download message
-    if : equal? 'AllData : message-type message
-         let : : task : message-task message
-           when : equal? task get-task
-                  pretty-print message
-                  display "Data: "
-                  truncated-print : utf8->string (message-data message)
-                  newline
-                  set! successful #t
-           . #f
-         . message
+      if : equal? 'AllData : message-type message
+           let : : task : message-task message
+             when : equal? task get-task
+                    pretty-print message
+                    display "Data: "
+                    truncated-print : utf8->string (message-data message)
+                    newline
+                    set! successful #t
+             . #f
+           . message
   ;; cleanup the task because we use the global queue for easier debugging
   define : remove-successful-tasks-from-queue message
     when : member (message-type message) '(AllData PutSuccessful)
