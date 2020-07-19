@@ -15,7 +15,18 @@ fi;
 ;; for emacs (defun test-this-file () (interactive) (save-current-buffer) (async-shell-command (concat (buffer-file-name (current-buffer)) " --test")))
 
 define-module : fcp
-    . #:export : main
+    . #:export
+    main 
+      . message-create message-task message-type message-data message-fields
+      . message-client-get  message-client-get-realtime message-client-get-bulk 
+      . message-client-put message-client-put-realtime message-client-put-bulk 
+      . message-remove-request
+      . send-message processor-put! processor-delete!
+      . printing-passthrough-processor printing-discarding-processor 
+      . discarding-processor processor-nodehello-printer
+      . processor-datafound-getdata 
+      . task-id
+      . call-with-fcp-connection with-fcp-connection
 
 define version "0.0.0 just-do-it"
 

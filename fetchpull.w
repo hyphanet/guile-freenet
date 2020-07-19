@@ -42,6 +42,7 @@ import
     only (ice-9 pretty-print) pretty-print
     only (ice-9 rdelim) read-line read-delimited
     only (ice-9 format) format
+    only (ice-9 iconv) string->bytevector
     only (srfi srfi-1) first second third alist-cons assoc lset<= lset-intersection lset-difference
     only (rnrs bytevectors) make-bytevector bytevector-length string->utf8 bytevector?
     only (rnrs io ports) get-bytevector-all get-bytevector-n
