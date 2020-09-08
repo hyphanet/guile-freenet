@@ -25,7 +25,7 @@ import
     only (ice-9 pretty-print) pretty-print
     only (srfi srfi-1) first second third assoc
     only (srfi srfi-26) cut
-    srfi srfi-37 ;; commandline handling
+    only (srfi srfi-37) option args-fold ;; commandline handling
     only (rnrs bytevectors) string->utf8 utf8->string
 
 
