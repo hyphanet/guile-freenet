@@ -13,6 +13,7 @@ exec guile -e main -s "$0" "$@"
              (ice-9 threads)
              (ice-9 vlist)
              (ice-9 rdelim)
+             (ice-9 futures)
              (rnrs io ports)
              (ice-9 match)
              (srfi srfi-42)
@@ -144,7 +145,7 @@ exec guile -e main -s "$0" "$@"
                                       known))
               (if (null? new)
                   known
-                  (lset-union equal? known (map crawl new)))))))))
+                  (lset-union equal? known (par-map crawl new)))))))))
 
 (define (parse-datehint str)
   (let ((lines (string-split str #\newline)))
