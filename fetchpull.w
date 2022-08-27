@@ -851,7 +851,7 @@ define : copy-resources-to path
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting images can be empty, need to copy them manually.
-    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get-realtime.png" "fetchpull-get-small.png" "fetchpull-get-bulk.png" "fetchpull-get-failed-realtime.png" "fetchpull-get-failed-small.png" "fetchpull-get-failed-bulk.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png"))
+    let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get-realtime.png" "fetchpull-get-small.png" "fetchpull-get-bulk.png" "fetchpull-get-failed-realtime.png" "fetchpull-get-failed-small.png" "fetchpull-get-failed-bulk.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png" "fetchpull-lifetime-realtime-success-count.png" "fetchpull-lifetime-small-success-count.png" "fetchpull-lifetime-bulk-success-count.png"))
         when : not : null? files
             when : file-exists? : first files
                 copy-file : first files
