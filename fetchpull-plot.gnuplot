@@ -84,7 +84,7 @@ set cbtics add ("2048" 2048)
 set cbtics add ("4096" 4096)
 set ylabel "days since upload"
 set cblabel "time to download (s)"
-set title "fetchpull: lifetime"
+set title "fetchpull: lifetime download-time"
 set term png size 800,600
 set output "fetchpull-lifetime-realtime.png"
 plot "<(grep realtime\\;\\#t fetchpull-stats-get.csv)" using 1:4:3 palette lw 1 title "realtime succeeded"
@@ -92,6 +92,37 @@ set output "fetchpull-lifetime-small.png"
 plot "<(grep small\\;\\#t fetchpull-stats-get.csv)" using 1:4:3 palette lw 1 title "small succeeded"
 set output "fetchpull-lifetime-bulk.png"
 plot "<(grep bulk\\;\\#t fetchpull-stats-get.csv)" using 1:4:3 palette lw 1 title "bulk succeeded"
+
+
+# download time heatmaps (do not work well yet)
+# set view map
+# set dgrid3d
+# set pm3d interpolate 16,16
+# set title "fetchpull: average download time"
+# 
+# set output "fetchpull-lifetime-bulk-download-time.png"
+# splot "<(grep 'bulk;#t' fetchpull-stats-get.csv)" using 1:4:3 palette with pm3d title "bulk succeeded"
+# set output "fetchpull-lifetime-small-download-time.png"
+# splot "<(grep 'small;#t' fetchpull-stats-get.csv)" using 1:4:3 palette with pm3d title "bulk succeeded"
+
+# success count plots
+set title "fetchpull: lifetime: monthly success-count"
+unset datafile separator
+unset logscale cb
+unset cbtics
+set cbtics format "%g "
+set cblabel "successful downloads (count)"
+# simple monthly binning
+set timefmt "%Y-%m"
+set format x "%Y-%m"
+
+set output "fetchpull-lifetime-realtime-success-count.png"
+plot "<(grep 'realtime;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "realtime succeeded"
+set output "fetchpull-lifetime-small-success-count.png"
+plot "<(grep 'small;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "small succeeded"
+set output "fetchpull-lifetime-bulk-success-count.png"
+plot "<(grep 'bulk;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "bulk succeeded"
+
 replot
 quit
 

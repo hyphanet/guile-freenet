@@ -791,9 +791,12 @@ define : website-content port
              p : img : @ (src "fetchpull-get-failed-bulk.png") (alt "fetch-pull failed bulk download graph")
              p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload graph")
              p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload graph")
-             p : img : @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot, realtime")
-             p : img : @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot, small bulk")
-             p : img : @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot, large bulk")
+             p : img : @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot: time per download, realtime")
+             p : img : @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot: time per download, small bulk")
+             p : img : @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot: time per download, large bulk")
+             p : img : @ (src "fetchpull-lifetime-realtime-success-count.png") (alt "lifetime plot: successes per month, realtime")
+             p : img : @ (src "fetchpull-lifetime-small-success-count.png") (alt "lifetime plot: successes per month, small bulk")
+             p : img : @ (src "fetchpull-lifetime-bulk-success-count.png") (alt "lifetime plot: successes per month, large bulk")
              h2 "explanation"
              p "Files uploaded regularly with the download attempted after some delay. 
 Realtime is uploaded with realtime priority, small and bulk with bulk priority. 
