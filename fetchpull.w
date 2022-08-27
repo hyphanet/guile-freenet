@@ -23,7 +23,7 @@ define design
         process:
             get the current date
             for realtime or bulk as MODE
-                for each power of two up to 128 as iii
+                for each power of two up to 512 as iii
                     insert a random chunk (without compression) 
                         to {DATE + iii days}-uploaded-iii-days-before-using-MODE
                     request the key DATE-uploaded-iii-days-before-using-MODE
@@ -920,7 +920,7 @@ define : main args
              define days-before
                  cons 0
                      map : λ(x) : expt 2 x
-                         iota 8
+                         iota 10 ;; up to 2**9: 512 days
              define* : KSK-for-get days #:key (append "") (mode 'realtime)
                  KSK-for-request (string-append (prefix) append) today days mode
              define* : KSK-for-put days #:key (append "") (mode 'realtime)
