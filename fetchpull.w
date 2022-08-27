@@ -783,6 +783,7 @@ define : website-content port
            head : meta : @ (charset "utf-8")
                   title ,title
            body : h1 ,title
+             p "These are the fetch-pull statistics. They provide an estimate of lifetimes of real files in Freenet and a somewhat early warning when network quality should degrade. Details are explained below the diagrams."
              p : img : @ (src "fetchpull-get-realtime.png") (alt "fetch-pull realtime download graph")
              p : img : @ (src "fetchpull-get-small.png") (alt "fetch-pull small download graph")
              p : img : @ (src "fetchpull-get-bulk.png") (alt "fetch-pull bulk download graph")
