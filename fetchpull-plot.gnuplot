@@ -27,24 +27,24 @@ set cblabel "days since upload"
 set title "fetchpull: requests"
 set term png size 800,600
 set output "fetchpull-get-realtime.png"
-plot "<(grep realtime\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "realtime succeeded"
+plot "<(grep realtime\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "realtime succeeded", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc"
 replot
 set output "fetchpull-get-small.png"
-plot "<(grep small\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "small succeeded"
+plot "<(grep small\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "small succeeded", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc"
 replot
 set output "fetchpull-get-bulk.png"
-plot "<(grep bulk\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "bulk succeeded"
+plot "<(grep bulk\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "bulk succeeded", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", 3600 title "60 min" at end lw 2 lc "#dddddd"
 replot
 set title "fetchpull: failed requests"
 set term png size 800,600
 set output "fetchpull-get-failed-realtime.png"
-plot "<(grep realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed"
+plot "<(grep realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc"
 replot
 set output "fetchpull-get-failed-small.png"
-plot "<(grep small\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "small failed"
+plot "<(grep small\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "small failed", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc"
 replot
 set output "fetchpull-get-failed-bulk.png"
-plot "<(grep bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "bulk failed"
+plot "<(grep bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "bulk failed", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc"
 replot
 # plot inserts
 set output "fetchpull-put.png"
@@ -52,7 +52,7 @@ set title "fetchpull: inserts"
 set ylabel "time to upload (seconds)"
 set xlabel "upload date"
 set cblabel "days until download"
-plot "<(grep realtime\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "realtime succeeded", "<(grep small\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "small succeeded", "<(grep bulk\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "bulk succeeded"
+plot "<(grep realtime\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "realtime succeeded", "<(grep small\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "small succeeded", "<(grep bulk\\;\\#t fetchpull-stats-put.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "bulk succeeded", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", 3600 title "60 min" at end lw 2 lc "#dddddd"
 replot
 # plot inserts
 set output "fetchpull-put-failed.png"
@@ -60,7 +60,7 @@ set title "fetchpull: failed inserts"
 set ylabel "time to upload (seconds)"
 set xlabel "upload date"
 set cblabel "days until download"
-plot "<(grep realtime\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed", "<(grep small\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "small failed", "<(grep bulk\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "bulk failed"
+plot "<(grep realtime\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed", "<(grep small\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "small failed", "<(grep bulk\\;\\#f fetchpull-stats-put.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "bulk failed", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", 3600 title "60 min" at end lw 2 lc "#dddddd"
 replot
 # plot max age of requests
 unset cbtics
