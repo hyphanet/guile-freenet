@@ -799,7 +799,7 @@ define : website-content port
            head : meta : @ (charset "utf-8")
                   title ,title
            body : h1 ,title
-             p "These are the fetch-pull statistics. They provide an estimate of lifetimes of real files in Freenet and a somewhat early warning when network quality should degrade. Details are explained below the diagrams."
+             p "These are the fetch-pull statistics. They provide an estimate of lifetimes of real files in Freenet and a somewhat early warning when network quality should degrade. Realtime are 80 bytes. Small are 128 kiB. Bulk is 1MiB. Further details are explained below the diagrams."
              ,@ map : λ (attributes) : ` p : img ,attributes
                '
                  @ (src "fetchpull-lifetime-realtime-success-count.png") (alt "lifetime plot: successes per month, realtime")
