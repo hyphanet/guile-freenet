@@ -395,7 +395,7 @@ define : discarding-processor message
 
 define : help args
     format : current-output-port
-           . "~a [-i] [--help | --version | --test | YYYY-mm-dd]
+           . "~a [-i] [--help | --version | --test | --site [target-folder] | YYYY-mm-dd]
 
 Options:
         -i    load the script and run an interactive REPL."
@@ -800,20 +800,22 @@ define : website-content port
                   title ,title
            body : h1 ,title
              p "These are the fetch-pull statistics. They provide an estimate of lifetimes of real files in Freenet and a somewhat early warning when network quality should degrade. Details are explained below the diagrams."
-             p : img : @ (src "fetchpull-lifetime-realtime-success-count.png") (alt "lifetime plot: successes per month, realtime")
-             p : img : @ (src "fetchpull-lifetime-small-success-count.png") (alt "lifetime plot: successes per month, small bulk")
-             p : img : @ (src "fetchpull-lifetime-bulk-success-count.png") (alt "lifetime plot: successes per month, large bulk")
-             p : img : @ (src "fetchpull-get-realtime.png") (alt "fetch-pull realtime download graph")
-             p : img : @ (src "fetchpull-get-small.png") (alt "fetch-pull small download graph")
-             p : img : @ (src "fetchpull-get-bulk.png") (alt "fetch-pull bulk download graph")
-             p : img : @ (src "fetchpull-get-failed-realtime.png") (alt "fetch-pull failed realtime download graph")
-             p : img : @ (src "fetchpull-get-failed-small.png") (alt "fetch-pull failed small download graph")
-             p : img : @ (src "fetchpull-get-failed-bulk.png") (alt "fetch-pull failed bulk download graph")
-             p : img : @ (src "fetchpull-put.png") (alt "fetch-pull upload graph")
-             p : img : @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload graph")
-             p : img : @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot: time per download, realtime")
-             p : img : @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot: time per download, small bulk")
-             p : img : @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot: time per download, large bulk")
+             ,@ map : λ (attributes) : ` p : img ,attributes
+               '
+                 @ (src "fetchpull-lifetime-realtime-success-count.png") (alt "lifetime plot: successes per month, realtime")
+                 @ (src "fetchpull-lifetime-small-success-count.png") (alt "lifetime plot: successes per month, small bulk")
+                 @ (src "fetchpull-lifetime-bulk-success-count.png") (alt "lifetime plot: successes per month, large bulk")
+                 @ (src "fetchpull-get-realtime.png") (alt "fetch-pull realtime download graph")
+                 @ (src "fetchpull-get-small.png") (alt "fetch-pull small download graph")
+                 @ (src "fetchpull-get-bulk.png") (alt "fetch-pull bulk download graph")
+                 @ (src "fetchpull-get-failed-realtime.png") (alt "fetch-pull failed realtime download graph")
+                 @ (src "fetchpull-get-failed-small.png") (alt "fetch-pull failed small download graph")
+                 @ (src "fetchpull-get-failed-bulk.png") (alt "fetch-pull failed bulk download graph")
+                 @ (src "fetchpull-put.png") (alt "fetch-pull upload graph")
+                 @ (src "fetchpull-put-failed.png") (alt "fetch-pull failed upload graph")
+                 @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot: time per download, realtime")
+                 @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot: time per download, small bulk")
+                 @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot: time per download, large bulk")
              h2 "explanation"
              p "Files uploaded regularly with the download attempted after some delay. 
 Realtime is uploaded with realtime priority, small and bulk with bulk priority. 
