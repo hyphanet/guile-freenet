@@ -117,11 +117,11 @@ set timefmt "%Y-%m"
 set format x "%Y-%m"
 
 set output "fetchpull-lifetime-realtime-success-count.png"
-plot "<(grep 'realtime;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "realtime succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 month" at begin lw 2 lc "#cccccc"
+plot "<(grep 'realtime;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "realtime succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 mo." at begin lw 2 lc "#cccccc"
 set output "fetchpull-lifetime-small-success-count.png"
-plot "<(grep 'small;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "small succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 month" at begin lw 2 lc "#cccccc"
+plot "<(grep 'small;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "small succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 mo." at begin lw 2 lc "#cccccc"
 set output "fetchpull-lifetime-bulk-success-count.png"
-plot "<(grep 'bulk;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "bulk succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 month" at begin lw 2 lc "#cccccc"
+plot "<(grep 'bulk;#t' fetchpull-stats-get.csv | sed 's/-..;/;/;s/;[^;]+//;s/;[^;]*//;s/;[^;]*//;s/;/ /g' | sort | uniq -c)" using 2:3:1 palette lw 4 title "bulk succeeded", 14 title "2 weeks" at begin  lw 2 lc "#aaaaaa", 90 title "3 mo." at begin lw 2 lc "#cccccc"
 
 replot
 quit
