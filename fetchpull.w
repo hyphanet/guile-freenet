@@ -802,11 +802,17 @@ define : website-content port
              p "These are the fetch-pull statistics. They provide an estimate of lifetimes of real files in Freenet and a somewhat early warning when network quality should degrade."
              p "Realtime are 80 bytes. Small are 128 kiB. Bulk is 1MiB."
              p "Further details are explained below the diagrams."
+             h2 "Lifetime diagrams"
+             p "Compare the success count at different ages. The age before the success count drops marks the expected lifetime."
              ,@ map : λ (attributes) : ` p : img ,attributes
                '
                  @ (src "fetchpull-lifetime-realtime-success-count.png") (alt "lifetime plot: successes per month, realtime")
                  @ (src "fetchpull-lifetime-small-success-count.png") (alt "lifetime plot: successes per month, small bulk")
                  @ (src "fetchpull-lifetime-bulk-success-count.png") (alt "lifetime plot: successes per month, large bulk")
+             h2 "Download time and upload time plots"
+             p "Compare the time to retrieve or insert a file at different ages."
+             ,@ map : λ (attributes) : ` p : img ,attributes
+               '
                  @ (src "fetchpull-get-realtime.png") (alt "fetch-pull realtime download graph")
                  @ (src "fetchpull-get-small.png") (alt "fetch-pull small download graph")
                  @ (src "fetchpull-get-bulk.png") (alt "fetch-pull bulk download graph")
@@ -818,14 +824,15 @@ define : website-content port
                  ;; @ (src "fetchpull-lifetime-realtime.png") (alt "lifetime plot: time per download, realtime")
                  ;; @ (src "fetchpull-lifetime-small.png") (alt "lifetime plot: time per download, small bulk")
                  ;; @ (src "fetchpull-lifetime-bulk.png") (alt "lifetime plot: time per download, large bulk")
-             h2 "explanation"
+             h2 "Explanation"
              h3 "Uploads and settings"
              p "The files are uploaded regularly. Downloads are attempted after some delay.
 Realtime is uploaded with realtime priority, small and bulk with bulk priority. 
 Details are available in fetchpull.w (see sources)"
-             p "Realtime is a raw KSK without any redirect. Size 80 bytes, Uploaded and downloaded in realtime mode without compression, using all tricks to reduce latency. This is the fake chat-message: What you would use for interactive status updates and such."
-             p "Small is a KSK splitfile (a KSK that has the links to about 7 CHKs, needs 3-4). Size 128kiB uncompressed, around 80kiB compressed, Uploaded and downloaded in bulk mode."
-             p "Bulk is a KSK which forwards to a CHK splitfile that has around 40 blocks, needs about 20 to download. Size 1MiB uncompressed, around 650kiB compressed, uploaded and downloaded in bulk mode."
+             ul
+               li "Realtime is a raw KSK without any redirect. Size 80 bytes, Uploaded and downloaded in realtime mode without compression, using all tricks to reduce latency. This is the fake chat-message: What you would use for interactive status updates and such."
+               li "Small is a KSK splitfile (a KSK that has the links to about 7 CHKs, needs 3-4). Size 128kiB uncompressed, around 80kiB compressed, Uploaded and downloaded in bulk mode."
+               li "Bulk is a KSK which forwards to a CHK splitfile that has around 40 blocks, needs about 20 to download. Size 1MiB uncompressed, around 650kiB compressed, uploaded and downloaded in bulk mode. These fetchpullstats need about 1 MiB."
              h3 "Understanding the lifetime diagrams"
              p "On the y-axis you have the days since the upload. That means: A file is uploaded (as KSK) and then downloaded that many days later. So for example the crosses in the top line of 2019 are downloaded 128 days after they have been inserted."
              p "The successes are aggregated per month and the color gives you the number of successful downloads in the month."
@@ -888,6 +895,7 @@ define : copy-resources-to path
             loop : cdr files
     ;; simply copy over the plot and plotting script
     ;; FIXME: the resulting images can be empty, need to copy them manually.
+    sleep 3
     let loop : (files '("fetchpull.w" "fetchpull-plot.gnuplot" "fetchpull-get-realtime.png" "fetchpull-get-small.png" "fetchpull-get-bulk.png" "fetchpull-get-failed-realtime.png" "fetchpull-get-failed-small.png" "fetchpull-get-failed-bulk.png" "fetchpull-put.png" "fetchpull-put-failed.png" "fetchpull-lifetime-realtime.png" "fetchpull-lifetime-small.png" "fetchpull-lifetime-bulk.png" "fetchpull-lifetime-realtime-success-count.png" "fetchpull-lifetime-small-success-count.png" "fetchpull-lifetime-bulk-success-count.png"))
         when : not : null? files
             when : file-exists? : first files
