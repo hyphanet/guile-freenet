@@ -33,39 +33,53 @@ array A[n]
 samples(x) = $0 > (n - 1) ? n : int($0+1)
 mod(x) = int(x) % n
 avg_n(x) = (A[mod($0)+1]=x, (sum [i=1:samples($0)] A[i]) / samples($0))
+# shorter average:
+m = 16
+array B[m]
+samples_m(x) = $0 > (m - 1) ? m : int($0+1)
+mod_m(x) = int(x) % m
+avg_m(x) = (B[mod_m($0)+1]=x, (sum [i=1:samples_m($0)] B[i]) / samples_m($0))
 
 # plot requests
 set title "fetchpull: requests"
 set term png size 800,600
 set output "fetchpull-get-realtime.png"
+set yrange [1:]
 plot "<(grep realtime\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "realtime succeeded", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 300 title "5 min" at end lw 2 lc "#cccccc", \
-   "<(grep \\;1\\;realtime\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;0\\;realtime\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 0 points" pt 7 ps 0.5 lw 2 lc rgb "gray", \
+   "<(grep \\;1\\;realtime\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan", \
+   "<(grep \\;32\\;realtime\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 32 points" pt 7 ps 0.5 lw 2 lc rgb "orange"
 replot
 set output "fetchpull-get-small.png"
 plot "<(grep small\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "small succeeded", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", \
-   "<(grep \\;1\\;small\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;0\\;small\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 0 points" pt 7 ps 0.5 lw 2 lc rgb "gray", \
+   "<(grep \\;1\\;small\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan", \
+   "<(grep \\;32\\;small\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 32 points" pt 7 ps 0.5 lw 2 lc rgb "orange"
 replot
 set output "fetchpull-get-bulk.png"
 plot "<(grep \\;bulk\\;\\#t fetchpull-stats-get.csv)" using 1:3:(log((column(4)+1))/log(2)) palette lw 1 title "bulk succeeded", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", 3600 title "60 min" at end lw 2 lc "#dddddd", \
-   "<(grep \\;1\\;bulk\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;0\\;bulk\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 0 points" pt 7 ps 0.5 lw 2 lc rgb "gray", \
+   "<(grep \\;1\\;bulk\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan", \
+   "<(grep \\;32\\;bulk\\;\\#t fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 32 points" pt 7 ps 0.5 lw 2 lc rgb "orange"
 replot
 
 # failed requests get less jitter
 set jitter overlap 0.5 spread 0.1 wrap 1
+unset yrange
 
 set title "fetchpull: failed requests"
 set term png size 800,600
 set output "fetchpull-get-failed-realtime.png"
 plot "<(grep realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 pt 4 title "realtime failed", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 300 title "5 min" at end lw 2 lc "#cccccc", \
-   "<(grep \\;1\\;realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;1\\;realtime\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_m($3)) title "running mean over previous 16 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
 replot
 set output "fetchpull-get-failed-small.png"
 plot "<(grep small\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "small failed", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", \
-   "<(grep \\;1\\;small\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;1\\;small\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_m($3)) title "running mean over previous 16 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
 replot
 set output "fetchpull-get-failed-bulk.png"
 plot "<(grep bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(column(3)<20000? column(3) : 1/0):(log((column(4)+1))/log(2)) palette lw 1 title "bulk failed", 3 title " 3 s" at end  lw 2 lc "#cccccc", 10 title "10 s" at end  lw 2 lc "#aaaaaa", 60 title "1 min" at end  lw 2 lc "#aaaaaa", 600 title "10 min" at end lw 2 lc "#cccccc", \
-   "<(grep \\;1\\;bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_n($3)) title "running mean over previous 64 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
+   "<(grep \\;1\\;bulk\\;\\#f fetchpull-stats-get.csv)" using 1:(avg_m($3)) title "running mean over previous 16 age 1 points" pt 7 ps 0.5 lw 2 lc rgb "dark-cyan"
 replot
 # plot inserts
 set output "fetchpull-put.png"
